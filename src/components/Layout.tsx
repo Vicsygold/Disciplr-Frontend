@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, type HTMLAttributes } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Menu } from "lucide-react";
 import { WalletConnectButton } from "./Wallet/WalletConnectButton";
-import { Text } from "./Text";
 import MobileDrawer from "./MobileDrawer";
+import { Text } from "./Text";
+import "./Layout.css";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,13 +14,17 @@ export default function Layout({ children }: LayoutProps) {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const toggleDrawer = () => setDrawerOpen(prev => !prev);
   const location = useLocation();
+  const isTransactionsActive = location.pathname === "/transactions";
+  const backgroundA11yProps = isDrawerOpen
+    ? ({ "aria-hidden": true, inert: "" } as HTMLAttributes<HTMLElement> & { inert: "" })
+    : {};
 
   return (
     <div
       style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
     >
       <header className="site-header">
-        <div className="header-brand">
+        <div className="header-brand" {...backgroundA11yProps}>
           <Link to="/" className="header-link" aria-label="Disciplr home">
             <Text role="title" as="span">
               Disciplr
@@ -26,17 +32,14 @@ export default function Layout({ children }: LayoutProps) {
           </Link>
           <Link
             to="/transactions"
-            className="header-link"
+            className={`header-link${isTransactionsActive ? " active" : ""}`}
             style={{
-              color:
-                location.pathname === "/transactions"
-                  ? "var(--accent)"
-                  : "var(--muted)",
+              color: isTransactionsActive ? "var(--accent)" : "var(--muted)",
             }}
             aria-label="Transactions"
+            aria-current={isTransactionsActive ? "page" : undefined}
           >
             <span className="header-transactions-label">Transactions</span>
-            {/* Icon fallback on very small screens */}
             <span
               aria-hidden="true"
               className="header-transactions-icon"
@@ -47,7 +50,7 @@ export default function Layout({ children }: LayoutProps) {
           </Link>
         </div>
 
-        <nav style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+        <nav className="desktop-nav" {...backgroundA11yProps}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <Link
               to="/"
@@ -92,10 +95,21 @@ export default function Layout({ children }: LayoutProps) {
             <WalletConnectButton />
           </div>
         </nav>
+        <button
+          type="button"
+          className="mobile-hamburger"
+          aria-label="Open navigation menu"
+          aria-controls="mobile-drawer"
+          aria-expanded={isDrawerOpen}
+          onClick={toggleDrawer}
+        >
+          <Menu size={24} aria-hidden="true" />
+        </button>
         <MobileDrawer isOpen={isDrawerOpen} onClose={() => setDrawerOpen(false)} />
       </header>
 
       <main
+        {...backgroundA11yProps}
         style={{
           flex: 1,
           padding: "var(--spacing-8)",

@@ -11,44 +11,69 @@ interface MobileDrawerProps {
 
 export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
-  // Close on Escape key
   useEffect(() => {
+    if (!isOpen) return;
+
+    triggerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         onClose();
       }
     };
-    if (isOpen) {
-      document.addEventListener('keydown', handleKey);
-    }
+
+    document.addEventListener('keydown', handleKey);
+
     return () => {
       document.removeEventListener('keydown', handleKey);
+      triggerRef.current?.focus();
     };
   }, [isOpen, onClose]);
 
-  // Prevent background scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
     }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="mobile-drawer-backdrop" onClick={onClose} aria-hidden="true">
-      <FocusTrap>
+    <FocusTrap
+      focusTrapOptions={{
+        allowOutsideClick: true,
+        clickOutsideDeactivates: false,
+        escapeDeactivates: false,
+        fallbackFocus: () => drawerRef.current ?? document.body,
+        initialFocus: () =>
+          drawerRef.current?.querySelector<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          ) ?? drawerRef.current ?? document.body,
+        returnFocusOnDeactivate: false,
+      }}
+    >
+      <div className="mobile-drawer-backdrop" onClick={onClose}>
         <nav
           className="mobile-drawer"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="mobile-drawer-title"
           id="mobile-drawer"
           ref={drawerRef}
+          tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
         >
+          <h2 id="mobile-drawer-title" className="mobile-drawer-title">
+            Navigation
+          </h2>
           <button className="mobile-drawer-close" onClick={onClose} aria-label="Close navigation drawer">
             <X size={24} />
           </button>
@@ -66,7 +91,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
           </Link>
           <WalletConnectButton />
         </nav>
-      </FocusTrap>
-    </div>
+      </div>
+    </FocusTrap>
   );
 }

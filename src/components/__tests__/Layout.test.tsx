@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import Layout from '../../Layout';
+import Layout from '../Layout';
+
+vi.mock('../Wallet/WalletConnectButton', () => ({
+  WalletConnectButton: () => <button type="button">Connect wallet</button>,
+}));
 
 describe('Layout component navigation', () => {
   test('transactions link receives active class and aria-current when on /transactions', () => {
