@@ -1,84 +1,217 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Text } from '../components/Text';
 import { useVerifierStore } from '../Zustand/Store';
+import {
+  filterValidationHistory,
+  paginate,
+} from '../utils/paginate';
+import type { ValidationHistoryStatusFilter } from '../utils/paginate';
+
+const PAGE_SIZE_OPTIONS = [5, 10, 25];
 
 export default function ValidationHistory() {
   const navigate = useNavigate();
   const { validationHistory } = useVerifierStore();
+  const [statusFilter, setStatusFilter] = useState<ValidationHistoryStatusFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pageSize, setPageSize] = useState(5);
+  const [page, setPage] = useState(1);
 
   // Calculate the Approve/Reject Ratio
   const total = validationHistory.length;
   const approvedCount = validationHistory.filter((t) => t.status === 'approved').length;
   const rejectedCount = validationHistory.filter((t) => t.status === 'rejected').length;
   const approvalRate = total > 0 ? Math.round((approvedCount / total) * 100) : 0;
+  const filteredHistory = useMemo(
+    () => filterValidationHistory(validationHistory, { status: statusFilter, query: searchQuery }),
+    [validationHistory, statusFilter, searchQuery],
+  );
+  const pagination = paginate(filteredHistory, page, pageSize);
+
+  const updateStatusFilter = (status: ValidationHistoryStatusFilter) => {
+    setStatusFilter(status);
+    setPage(1);
+  };
+
+  const updateSearchQuery = (query: string) => {
+    setSearchQuery(query);
+    setPage(1);
+  };
+
+  const updatePageSize = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <header className="mb-2">
         <button 
           onClick={() => navigate('/verifier')}
-          className="text-gray-500 hover:text-gray-800 mb-2 text-sm font-medium transition"
+          className="mb-2 text-sm font-medium transition"
+          style={{ color: 'var(--muted)' }}
         >
           &larr; Back to Dashboard
         </button>
         <Text role="display" as="h1">Validation History</Text>
-        <Text role="body" as="p" className="text-gray-500 mt-1">
+        <Text role="body" as="p" className="mt-1" style={{ color: 'var(--muted)' }}>
           A complete log of your past milestone verifications and notes.
         </Text>
       </header>
 
       {/* Stats / Ratio Banner */}
-      <section className="flex flex-col md:flex-row gap-4 bg-white p-6 border rounded-lg shadow-sm">
+      <section
+        className="flex flex-col md:flex-row gap-4 p-6 border rounded-lg shadow-sm"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+      >
         <div className="flex-1">
-          <Text role="body" as="p" className="text-gray-500">Total Validated</Text>
+          <Text role="body" as="p" style={{ color: 'var(--muted)' }}>Total Validated</Text>
           <Text role="display" as="h2">{total}</Text>
         </div>
         <div className="flex-1">
-          <Text role="body" as="p" className="text-gray-500">Approved</Text>
-          <Text role="display" as="h2" className="text-green-600">{approvedCount}</Text>
+          <Text role="body" as="p" style={{ color: 'var(--muted)' }}>Approved</Text>
+          <Text role="display" as="h2" style={{ color: 'var(--success)' }}>{approvedCount}</Text>
         </div>
         <div className="flex-1">
-          <Text role="body" as="p" className="text-gray-500">Rejected</Text>
-          <Text role="display" as="h2" className="text-red-600">{rejectedCount}</Text>
+          <Text role="body" as="p" style={{ color: 'var(--muted)' }}>Rejected</Text>
+          <Text role="display" as="h2" style={{ color: 'var(--danger)' }}>{rejectedCount}</Text>
         </div>
         <div className="flex-1">
-          <Text role="body" as="p" className="text-gray-500">Approval Rate</Text>
+          <Text role="body" as="p" style={{ color: 'var(--muted)' }}>Approval Rate</Text>
           <Text role="display" as="h2">{approvalRate}%</Text>
         </div>
       </section>
 
+      <section
+        className="flex flex-col md:flex-row gap-4 p-4 border rounded-lg"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+        aria-label="Validation history filters"
+      >
+        <label className="flex flex-col gap-1 flex-1">
+          <Text role="caption" as="span" style={{ color: 'var(--muted)' }}>Search vault or owner</Text>
+          <input
+            aria-label="Search validation history by vault or owner"
+            value={searchQuery}
+            onChange={(event) => updateSearchQuery(event.target.value)}
+            placeholder="Search vault or owner"
+            style={{
+              background: 'var(--bg)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              padding: '0.65rem 0.75rem',
+            }}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <Text role="caption" as="span" style={{ color: 'var(--muted)' }}>Outcome</Text>
+          <select
+            aria-label="Filter validation history by outcome"
+            value={statusFilter}
+            onChange={(event) => updateStatusFilter(event.target.value as ValidationHistoryStatusFilter)}
+            style={{
+              background: 'var(--bg)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              padding: '0.65rem 0.75rem',
+            }}
+          >
+            <option value="all">All outcomes</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <Text role="caption" as="span" style={{ color: 'var(--muted)' }}>Page size</Text>
+          <select
+            aria-label="Validation history page size"
+            value={pageSize}
+            onChange={(event) => updatePageSize(Number(event.target.value))}
+            style={{
+              background: 'var(--bg)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              padding: '0.65rem 0.75rem',
+            }}
+          >
+            {PAGE_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={size}>{size} per page</option>
+            ))}
+          </select>
+        </label>
+      </section>
+
       {/* History Log */}
-      <section className="bg-white border rounded-lg shadow-sm overflow-hidden">
+      <section
+        className="border rounded-lg shadow-sm overflow-hidden"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+      >
         {total === 0 ? (
-          <div className="p-12 text-center text-gray-500">
+          <div className="p-12 text-center" style={{ color: 'var(--muted)' }}>
             <Text role="body" as="h3">No History Found</Text>
             <Text role="body" as="p" className="mt-2">You haven't processed any validations yet.</Text>
           </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="p-12 text-center" style={{ color: 'var(--muted)' }}>
+            <Text role="body" as="h3">No matching validations</Text>
+            <Text role="body" as="p" className="mt-2">
+              Adjust the outcome filter or search query to see more results.
+            </Text>
+          </div>
         ) : (
           <div className="flex flex-col">
-            {validationHistory.map((task) => (
+            {pagination.items.map((task) => (
               <div 
                 key={task.id} 
-                className="p-6 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition flex flex-col md:flex-row gap-4 justify-between"
+                className="p-6 border-b last:border-b-0 transition flex flex-col md:flex-row gap-4 justify-between"
+                style={{ borderColor: 'var(--border)' }}
               >
                 <div className="flex flex-col gap-2 md:w-1/3">
                   <div className="flex items-center gap-3">
-                    <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-                      task.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
+                    <span
+                      className="px-2 py-1 rounded text-xs font-bold uppercase"
+                      style={{
+                        color: task.status === 'approved' ? 'var(--success)' : 'var(--danger)',
+                        border: `1px solid ${task.status === 'approved' ? 'var(--success)' : 'var(--danger)'}`,
+                        background: task.status === 'approved'
+                          ? 'var(--success-transparent)'
+                          : 'var(--danger-transparent)',
+                      }}
+                    >
                       {task.status}
                     </span>
-                    <Text role="body" as="span" className="text-sm text-gray-500">ID: {task.id}</Text>
+                    <Text role="body" as="span" className="text-sm" style={{ color: 'var(--muted)' }}>
+                      ID: {task.id}
+                    </Text>
                   </div>
                   <Text role="body" as="h3">{task.vaultName}</Text>
                   <Text role="body" as="p" className="text-sm font-medium">{task.milestone}</Text>
-                  <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded font-mono w-max">
+                  <span
+                    className="text-xs px-2 py-1 rounded font-mono w-max"
+                    style={{
+                      background: 'var(--bg)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                    }}
+                  >
                     Owner: {task.owner}
                   </span>
                 </div>
 
-                <div className="md:w-2/3 bg-gray-50 p-4 rounded border text-sm text-gray-700">
-                  <Text role="body" as="p" className="font-bold mb-1 text-xs uppercase text-gray-500">
+                <div
+                  className="md:w-2/3 p-4 rounded border text-sm"
+                  style={{
+                    background: 'var(--bg)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text)',
+                  }}
+                >
+                  <Text role="body" as="p" className="font-bold mb-1 text-xs uppercase" style={{ color: 'var(--muted)' }}>
                     Verification Notes:
                   </Text>
                   <Text role="body" as="p" className="italic">
@@ -90,6 +223,52 @@ export default function ValidationHistory() {
           </div>
         )}
       </section>
+
+      {total > 0 && filteredHistory.length > 0 && (
+        <nav
+          className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between"
+          aria-label="Validation history pagination"
+        >
+          <Text role="caption" as="p" style={{ color: 'var(--muted)' }}>
+            Showing {pagination.items.length} of {pagination.totalItems} matching validations.
+          </Text>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Go to previous validation history page"
+              disabled={pagination.currentPage === 1}
+              onClick={() => setPage((current) => current - 1)}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                background: 'var(--surface)',
+                opacity: pagination.currentPage === 1 ? 0.5 : 1,
+              }}
+            >
+              Previous
+            </button>
+            <Text role="caption" as="span" aria-live="polite">
+              Page {pagination.currentPage} of {pagination.pageCount}
+            </Text>
+            <button
+              type="button"
+              aria-label="Go to next validation history page"
+              disabled={pagination.currentPage === pagination.pageCount}
+              onClick={() => setPage((current) => current + 1)}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                background: 'var(--surface)',
+                opacity: pagination.currentPage === pagination.pageCount ? 0.5 : 1,
+              }}
+            >
+              Next
+            </button>
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

@@ -1,0 +1,52 @@
+import type { ValidationTask } from '../Zustand/Store';
+
+export type ValidationHistoryStatusFilter = 'all' | 'approved' | 'rejected';
+
+export interface ValidationHistoryFilterOptions {
+  status: ValidationHistoryStatusFilter;
+  query: string;
+}
+
+export interface PaginationResult<T> {
+  items: T[];
+  currentPage: number;
+  pageCount: number;
+  totalItems: number;
+  pageSize: number;
+}
+
+export function filterValidationHistory(
+  tasks: ValidationTask[],
+  { status, query }: ValidationHistoryFilterOptions,
+): ValidationTask[] {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  return tasks.filter((task) => {
+    const matchesStatus = status === 'all' || task.status === status;
+    const matchesQuery =
+      normalizedQuery.length === 0 ||
+      task.vaultName.toLowerCase().includes(normalizedQuery) ||
+      task.owner.toLowerCase().includes(normalizedQuery);
+
+    return matchesStatus && matchesQuery;
+  });
+}
+
+export function paginate<T>(
+  items: T[],
+  page: number,
+  pageSize: number,
+): PaginationResult<T> {
+  const safePageSize = Math.max(1, Math.floor(pageSize));
+  const pageCount = Math.max(1, Math.ceil(items.length / safePageSize));
+  const currentPage = Math.min(Math.max(1, Math.floor(page)), pageCount);
+  const start = (currentPage - 1) * safePageSize;
+
+  return {
+    items: items.slice(start, start + safePageSize),
+    currentPage,
+    pageCount,
+    totalItems: items.length,
+    pageSize: safePageSize,
+  };
+}
