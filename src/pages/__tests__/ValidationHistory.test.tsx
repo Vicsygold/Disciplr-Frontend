@@ -4,6 +4,15 @@ import type { ValidationTask } from '../../Zustand/Store';
 import { useVerifierStore } from '../../Zustand/Store';
 import ValidationHistory from '../ValidationHistory';
 
+const { mockDownloadCsv } = vi.hoisted(() => ({
+  mockDownloadCsv: vi.fn(),
+}));
+
+vi.mock('../../utils/csv', async () => {
+  const actual = await vi.importActual('../../utils/csv');
+  return { ...actual, downloadCsv: mockDownloadCsv };
+});
+
 vi.mock('../../Zustand/Store', () => ({
   useVerifierStore: vi.fn(),
 }));
@@ -184,5 +193,60 @@ describe('ValidationHistory', () => {
     fireEvent.click(screen.getByRole('button', { name: /back to dashboard/i }));
 
     expect(mockNavigate).toHaveBeenCalledWith('/verifier');
+  });
+
+  describe('CSV export', () => {
+    beforeEach(() => {
+      mockDownloadCsv.mockClear();
+    });
+
+    it('exports all items when no filter is active', () => {
+      renderHistory();
+
+      const btn = screen.getByRole('button', { name: /export.*csv/i });
+      fireEvent.click(btn);
+
+      expect(mockDownloadCsv).toHaveBeenCalledTimes(1);
+      const [csv, filename] = mockDownloadCsv.mock.calls[0];
+      expect(filename).toBe('validation-history.csv');
+      expect(csv).toContain('ID,Status,Vault Name,Owner,Amount,Deadline,Milestone,Notes');
+      for (const task of baseHistory) {
+        expect(csv).toContain(task.id);
+      }
+    });
+
+    it('exports only the filtered set when status filter is applied', () => {
+      renderHistory();
+
+      fireEvent.change(screen.getByLabelText('Filter validation history by outcome'), {
+        target: { value: 'approved' },
+      });
+
+      const btn = screen.getByRole('button', { name: /export.*csv/i });
+      fireEvent.click(btn);
+
+      const [csv] = mockDownloadCsv.mock.calls[0];
+      expect(csv).toContain('v-001');
+      expect(csv).toContain('v-003');
+      expect(csv).toContain('v-005');
+      expect(csv).toContain('v-006');
+      expect(csv).not.toContain('v-002');
+      expect(csv).not.toContain('v-004');
+    });
+
+    it('exports only the filtered set when search query is active', () => {
+      renderHistory();
+
+      fireEvent.change(screen.getByLabelText('Search validation history by vault or owner'), {
+        target: { value: 'delta' },
+      });
+
+      const btn = screen.getByRole('button', { name: /export.*csv/i });
+      fireEvent.click(btn);
+
+      const [csv] = mockDownloadCsv.mock.calls[0];
+      expect(csv).toContain('v-004');
+      expect(csv).not.toContain('v-001');
+    });
   });
 });

@@ -7,6 +7,7 @@ import {
   paginate,
 } from '../utils/paginate';
 import type { ValidationHistoryStatusFilter } from '../utils/paginate';
+import { downloadCsv, toCsv } from '../utils/csv';
 
 const PAGE_SIZE_OPTIONS = [5, 10, 25];
 
@@ -144,6 +145,25 @@ export default function ValidationHistory() {
             ))}
           </select>
         </label>
+
+        <div className="flex flex-col gap-1 self-end">
+          <Text role="caption" as="span" style={{ color: 'var(--muted)' }}>&nbsp;</Text>
+          <button
+            aria-label="Export filtered validation history as CSV"
+            onClick={() => downloadCsv(toCsv(filteredHistory), 'validation-history.csv')}
+            style={{
+              background: 'var(--bg)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              padding: '0.65rem 0.75rem',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Export CSV
+          </button>
+        </div>
       </section>
 
       {/* History Log */}
