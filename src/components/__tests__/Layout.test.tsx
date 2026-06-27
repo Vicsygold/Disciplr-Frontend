@@ -7,6 +7,10 @@ vi.mock('../Wallet/WalletConnectButton', () => ({
   WalletConnectButton: () => <button type="button">Connect wallet</button>,
 }));
 
+vi.mock('../TrustlineBanner', () => ({
+  TrustlineBanner: () => null,
+}));
+
 // MobileDrawer uses FocusTrap only when open; mock it so any accidental open
 // in these tests doesn't break due to missing DOM focus targets.
 vi.mock('focus-trap-react', () => ({

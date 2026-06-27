@@ -5,6 +5,7 @@ import { WalletConnectButton } from "./Wallet/WalletConnectButton";
 import MobileDrawer from "./MobileDrawer";
 import NavLink from "./NavLink";
 import { Text } from "./Text";
+import { TrustlineBanner } from "./TrustlineBanner";
 import "./Layout.css";
 
 interface LayoutProps {
@@ -99,6 +100,7 @@ export default function Layout({ children }: LayoutProps) {
         </button>
         <MobileDrawer isOpen={isDrawerOpen} onClose={() => setDrawerOpen(false)} />
       </header>
+      <TrustlineBanner />
 
       <main
         {...backgroundA11yProps}
