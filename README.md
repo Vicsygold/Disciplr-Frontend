@@ -241,3 +241,7 @@ disciplr-frontend/
   `src/components/Wallet/`.
 - Keep token and validator documentation aligned with the `design-system/`
   package.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the dual Vitest + Jest test setup, branch naming, and PR conventions.
