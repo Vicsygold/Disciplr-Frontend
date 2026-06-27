@@ -1,6 +1,7 @@
 import { vaults } from "@/components/Notification/exampleNotification/example";
 import { Text } from "@/components/Text";
-import { useState } from "react";
+import { useNotificationPreferences } from "../Zustand/Store";
+
 
 type SettingsToggleProps = {
   checked?: boolean;
@@ -27,10 +28,17 @@ function SettingsToggle({ checked, label, onChange }: SettingsToggleProps) {
 }
 
 export default function NotificationSettings() {
-  const [emailNotification, setEmailNotification] = useState(true);
-  const [pushNotification, setPushNotification] = useState(false);
-  const [frequency, setFrequency] = useState("");
-  const [quietHours, setQuietHours] = useState("12:00");
+  const {
+    email: emailNotification,
+    push: pushNotification,
+    frequency,
+    quietHours,
+    setEmail: setEmailNotification,
+    setPush: setPushNotification,
+    setFrequency,
+    setQuietHours,
+    reset,
+  } = useNotificationPreferences();
   return (
     <>
       <div className="w-full rounded-md z-20 px-3 py-3 notification-settings-panel">
@@ -88,6 +96,14 @@ export default function NotificationSettings() {
                 setQuietHours(e.target.value);
               }}
             />
+          </div>
+          <div className="flex justify-end items-center mt-5">
+            <button
+              className="px-4 py-2 font-medium rounded transition notification-settings-reset"
+              onClick={reset}
+            >
+              Reset Preferences
+            </button>
           </div>
         </div>
       </div>
@@ -164,6 +180,19 @@ export default function NotificationSettings() {
           outline: 4px solid var(--accent-transparent);
           outline-offset: 4px;
         }
+
+        .notification-settings-reset {
+          background: var(--surface-raised);
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          cursor: pointer;
+        }
+
+        .notification-settings-reset:hover {
+          background: var(--border);
+        }
+
       `}</style>
     </>
   );
