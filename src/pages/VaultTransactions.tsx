@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, memo } from "react";
 import { windowRange, WINDOW_THRESHOLD } from "../utils/windowRange";
 import { toCsv, downloadCsv } from "../utils/csv";
+import { computeTxTotals } from "../utils/txTotals";
 import { AddressDisplay } from "../components/AddressDisplay";
 import type { TxType, TxStatus } from "../types/vault";
 
@@ -215,6 +216,9 @@ const TYPE_META: Record<TxType, TypeMeta> = {
   },
 };
 
+const TX_TYPES: TxType[] = ["create", "validate", "release", "redirect"];
+const ALL_TYPES: TxType[] = [...TX_TYPES];
+
 const STATUS_META: Record<TxStatus, StatusMeta> = {
   confirmed: {
     label: "Confirmed",
@@ -290,7 +294,7 @@ interface VaultTransactionsProps {
 export default function VaultTransactions({
   transactions = MOCK_TRANSACTIONS,
 }: VaultTransactionsProps = {}) {
-  const [filterType, setFilterType] = useState<string>("All Types");
+  const [selectedTypes, setSelectedTypes] = useState<TxType[]>([...ALL_TYPES]);
   const [filterVault, setFilterVault] = useState<string>("All Vaults");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchHash, setSearchHash] = useState<string>("");
@@ -309,8 +313,8 @@ export default function VaultTransactions({
 
   const filtered = useMemo<Transaction[]>(() => {
     let list = [...transactions];
-    if (filterType !== "All Types")
-      list = list.filter((t) => t.type === filterType);
+    if (selectedTypes.length < ALL_TYPES.length)
+      list = list.filter((t) => selectedTypes.includes(t.type));
     if (filterVault !== "All Vaults")
       list = list.filter((t) => t.vault === filterVault);
     if (filterStatus !== "all")
@@ -330,7 +334,7 @@ export default function VaultTransactions({
     );
     return list;
   }, [
-    filterType,
+    selectedTypes,
     filterVault,
     filterStatus,
     searchHash,
@@ -360,8 +364,30 @@ export default function VaultTransactions({
     [transactions],
   );
 
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const tx of transactions) {
+      counts[tx.type] = (counts[tx.type] || 0) + 1;
+    }
+    return counts;
+  }, [transactions]);
+
+  // Live counts reflect the current filtered (visible) set
+  const filteredTypeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const tx of filtered) {
+      counts[tx.type] = (counts[tx.type] || 0) + 1;
+    }
+    return counts;
+  }, [filtered]);
+
+  const filteredTotals = useMemo(
+    () => computeTxTotals(filtered),
+    [filtered],
+  );
+
   const clearFilters = () => {
-    setFilterType("All Types");
+    setSelectedTypes([...ALL_TYPES]);
     setFilterVault("All Vaults");
     setFilterStatus("all");
     setSearchHash("");
@@ -371,7 +397,7 @@ export default function VaultTransactions({
   };
 
   const hasFilters =
-    filterType !== "All Types" ||
+    selectedTypes.length < ALL_TYPES.length ||
     filterVault !== "All Vaults" ||
     filterStatus !== "all" ||
     !!searchHash ||
@@ -433,6 +459,70 @@ export default function VaultTransactions({
             ))}
           </div>
 
+          {/* Type Filter Toolbar */}
+          <div className="vt-type-toolbar" role="group" aria-label="Filter by transaction type">
+            <button
+              className={`vt-type-chip ${selectedTypes.length === ALL_TYPES.length ? "vt-type-chip--active-all" : ""}`}
+              onClick={() =>
+                setSelectedTypes(
+                  selectedTypes.length === ALL_TYPES.length ? [] : [...ALL_TYPES],
+                )
+              }
+              aria-pressed={selectedTypes.length === ALL_TYPES.length}
+            >
+              <span className="vt-type-chip-label">All</span>
+              <span className="vt-type-chip-count">{filtered.length}</span>
+            </button>
+            {TX_TYPES.map((type) => {
+              const meta = TYPE_META[type];
+              const active = selectedTypes.includes(type);
+              return (
+                <button
+                  key={type}
+                  className={`vt-type-chip ${active ? "vt-type-chip--active" : ""}`}
+                  style={
+                    active
+                      ? {
+                          background: meta.bg,
+                          borderColor: meta.border,
+                          color: meta.color,
+                        }
+                      : undefined
+                  }
+                  onClick={() =>
+                    setSelectedTypes((prev) =>
+                      prev.includes(type)
+                        ? prev.filter((t) => t !== type)
+                        : [...prev, type],
+                    )
+                  }
+                  aria-pressed={active}
+                >
+                  <meta.icon size={13} color={active ? meta.color : undefined} />
+                  <span className="vt-type-chip-label">{meta.label}</span>
+                  <span className="vt-type-chip-count">{filteredTypeCounts[type] ?? 0}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Visible Totals */}
+          {filtered.length > 0 && (
+            <div className="vt-totals-strip">
+              <span className="vt-totals-item">
+                {filtered.length} transaction{filtered.length !== 1 ? "s" : ""}
+              </span>
+              <span className="vt-totals-sep" aria-hidden="true" />
+              <span className="vt-totals-item">
+                Amount: {fmtAmount(filteredTotals.totalAmount)} XLM
+              </span>
+              <span className="vt-totals-sep" aria-hidden="true" />
+              <span className="vt-totals-item">
+                Fees: {filteredTotals.totalFees.toFixed(5)} XLM
+              </span>
+            </div>
+          )}
+
           {/* Filters */}
           <div className="vt-filters">
             <div className="vt-search-wrap">
@@ -445,11 +535,6 @@ export default function VaultTransactions({
               />
             </div>
             <div className="vt-filter-row">
-              <Select
-                value={filterType}
-                onChange={setFilterType}
-                options={TYPES}
-              />
               <Select
                 value={filterVault}
                 onChange={setFilterVault}
@@ -1188,6 +1273,50 @@ const CSS = `
   .vt-stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: #475569; font-weight: 600; margin-bottom: 8px; }
   .vt-stat-value { font-size: 22px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
   .vt-stat-sub   { font-size: 12px; color: #475569; }
+  .vt-type-toolbar {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;
+  }
+  .vt-type-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08);
+    color: #64748b; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600;
+    padding: 6px 12px; border-radius: var(--radius-full); cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-in-out);
+    user-select: none;
+  }
+  .vt-type-chip:hover { color: #94a3b8; border-color: rgba(255,255,255,0.18); }
+  .vt-type-chip--active { color: #6ee7b7; }
+  .vt-type-chip--active-all {
+    background: rgba(110,231,183,0.1); border-color: rgba(110,231,183,0.25);
+    color: #6ee7b7;
+  }
+  .vt-type-chip--active-all:hover { background: rgba(110,231,183,0.15); }
+  .vt-type-chip-label { line-height: 1; }
+  .vt-type-chip-count {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    background: rgba(255,255,255,0.07); border-radius: var(--radius-full);
+    padding: 1px 6px; line-height: 1.4;
+  }
+  .vt-type-chip--active .vt-type-chip-count {
+    background: rgba(255,255,255,0.12);
+  }
+  .vt-type-chip--active-all .vt-type-chip-count {
+    background: rgba(110,231,183,0.15);
+  }
+  .vt-totals-strip {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 18px; padding: 10px 16px;
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-md);
+  }
+  .vt-totals-item {
+    font-size: 12px; color: #94a3b8; font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .vt-totals-sep {
+    width: 3px; height: 3px; border-radius: 50%;
+    background: #334155; flex-shrink: 0;
+  }
   .vt-filters {
     background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px; padding: 16px 18px; margin-bottom: 32px;
