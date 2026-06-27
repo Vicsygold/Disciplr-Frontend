@@ -180,5 +180,21 @@ describe('Analytics lazy route', () => {
     // After export completes the button should return to normal
     await waitFor(() => expect(screen.getByRole('button', { name: /pdf report/i })).not.toBeDisabled(), { timeout: 2000 })
   })
+
+  it('shows the tokenized chart legend when comparison mode is enabled', async () => {
+    const { default: Analytics } = await import('../Analytics')
+
+    render(
+      <MemoryRouter>
+        <Analytics />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /compare periods/i }))
+
+    expect(screen.getAllByLabelText('Chart legend')).toHaveLength(2)
+    expect(screen.getByText('This Period %')).toHaveClass('text-caption')
+    expect(screen.getByText('Prev Period')).toBeInTheDocument()
+  })
 })
 

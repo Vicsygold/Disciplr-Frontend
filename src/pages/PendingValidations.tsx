@@ -46,17 +46,17 @@ export default function PendingValidations() {
     [filteredValidations, sortOrder],
   );
 
-  // Keep selection in sync with the queue: drop ids that are no longer pending or filtered out.
+  // Keep selection in sync with the queue and reset it when the active filters change.
   useEffect(() => {
     setSelectedIds((prev) => {
-      const next = prev.filter(
-        (id) =>
-          pendingValidations.some((t) => t.id === id) &&
-          sortedValidations.some((t) => t.id === id)
-      );
+      if (searchQuery || selectedMilestone) {
+        return [];
+      }
+
+      const next = prev.filter((id) => pendingValidations.some((t) => t.id === id));
       return next.length === prev.length ? prev : next;
     });
-  }, [pendingValidations, sortedValidations]);
+  }, [pendingValidations, searchQuery, selectedMilestone]);
 
   const allIds = sortedValidations.map((t) => t.id);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.includes(id));

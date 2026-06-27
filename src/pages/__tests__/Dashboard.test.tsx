@@ -18,7 +18,7 @@ describe('Dashboard page', () => {
     
     // Verify cards and sections
     expect(screen.getByText(/Total Locked/i)).toBeInTheDocument();
-    expect(screen.getByText(/Active Vaults/i)).toBeInTheDocument();
+    expect(screen.getByText(/Active Vaults/i, { selector: '.text-caption' }).parentElement).toHaveTextContent('3');
     expect(screen.getByText(/Pending Milestones/i)).toBeInTheDocument();
     expect(screen.getByText(/Recent Activity/i)).toBeInTheDocument();
     expect(screen.getByText(/Upcoming Deadlines/i)).toBeInTheDocument();

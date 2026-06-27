@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 import {
   Target, TrendingUp, CheckCircle, AlertTriangle,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useRef } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import { ChartLegend } from '../components/ChartLegend'
 import { buildAnalyticsSeriesColors, getAnalyticsChartTokens } from './analyticsTheme'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -278,6 +279,26 @@ export default function Analytics() {
     itemStyle: { color: seriesColors.tooltipText },
     labelStyle: { color: seriesColors.tooltipMuted },
   }), [seriesColors])
+
+  const successLegendEntries = showComparison
+    ? [
+        { label: 'This Period %', colorKey: 'success', id: 'success' },
+        { label: 'Failed %', colorKey: 'failed', id: 'failed' },
+        { label: 'Prev Period %', colorKey: 'comparison', id: 'comparison' },
+      ]
+    : [
+        { label: 'This Period %', colorKey: 'success', id: 'success' },
+        { label: 'Failed %', colorKey: 'failed', id: 'failed' },
+      ]
+
+  const capitalLegendEntries = showComparison
+    ? [
+        { label: 'USDC Locked', colorKey: 'success', id: 'capital' },
+        { label: 'Prev Period', colorKey: 'comparison', id: 'prev-capital' },
+      ]
+    : [
+        { label: 'USDC Locked', colorKey: 'success', id: 'capital' },
+      ]
 
   return (
     <>
@@ -642,20 +663,24 @@ export default function Analytics() {
                 {showComparison ? ' Previous period success rate is included for comparison.' : ''}
               </ChartSummary>
               {isLoading ? <SkeletonBox /> : !hasData ? <EmptyState /> : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={displayData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={seriesColors.grid} vertical={false} />
-                    <XAxis dataKey="name" stroke={seriesColors.axis} tick={{ fill: seriesColors.axis, fontSize: 11 }} />
-                    <YAxis stroke={seriesColors.axis} tick={{ fill: seriesColors.axis, fontSize: 11 }} unit="%" />
-                    <Tooltip {...tooltipStyle} />
-                    {showComparison && <Legend wrapperStyle={{ fontSize: '0.78rem' }} />}
-                    <Line type="monotone" dataKey="success" stroke={seriesColors.success} strokeWidth={2.5} dot={{ r: 3, fill: seriesColors.success }} name="This Period %" isAnimationActive={chartAnimationEnabled} />
-                    <Line type="monotone" dataKey="failed" stroke={seriesColors.failed} strokeWidth={2} dot={{ r: 2, fill: seriesColors.failed }} name="Failed %" strokeDasharray="4 2" isAnimationActive={chartAnimationEnabled} />
-                    {showComparison && (
-                      <Line type="monotone" dataKey="prevSuccess" stroke={seriesColors.comparison} strokeWidth={1.5} dot={false} name="Prev Period %" strokeDasharray="6 3" isAnimationActive={chartAnimationEnabled} />
-                    )}
-                  </LineChart>
-                </ResponsiveContainer>
+                <>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart data={displayData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={seriesColors.grid} vertical={false} />
+                      <XAxis dataKey="name" stroke={seriesColors.axis} tick={{ fill: seriesColors.axis, fontSize: 11 }} />
+                      <YAxis stroke={seriesColors.axis} tick={{ fill: seriesColors.axis, fontSize: 11 }} unit="%" />
+                      <Tooltip {...tooltipStyle} />
+                      <Line type="monotone" dataKey="success" stroke={seriesColors.success} strokeWidth={2.5} dot={{ r: 3, fill: seriesColors.success }} name="This Period %" isAnimationActive={chartAnimationEnabled} />
+                      <Line type="monotone" dataKey="failed" stroke={seriesColors.failed} strokeWidth={2} dot={{ r: 2, fill: seriesColors.failed }} name="Failed %" strokeDasharray="4 2" isAnimationActive={chartAnimationEnabled} />
+                      {showComparison && (
+                        <Line type="monotone" dataKey="prevSuccess" stroke={seriesColors.comparison} strokeWidth={1.5} dot={false} name="Prev Period %" strokeDasharray="6 3" isAnimationActive={chartAnimationEnabled} />
+                      )}
+                    </LineChart>
+                  </ResponsiveContainer>
+                  {showComparison && (
+                    <ChartLegend entries={successLegendEntries} colors={seriesColors} tokens={chartTokens} />
+                  )}
+                </>
               )}
             </Card>
 
@@ -667,29 +692,33 @@ export default function Analytics() {
                 {showComparison ? ' Previous period capital is shown as a comparison area.' : ''}
               </ChartSummary>
               {isLoading ? <SkeletonBox /> : !hasData ? <EmptyState /> : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={displayData}>
-                    <defs>
-                      <linearGradient id="capGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={seriesColors.success} stopOpacity={0.25} />
-                        <stop offset="95%" stopColor={seriesColors.success} stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="prevCapGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={seriesColors.comparison} stopOpacity={0.15} />
-                        <stop offset="95%" stopColor={seriesColors.comparison} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={seriesColors.grid} vertical={false} />
-                    <XAxis dataKey="name" stroke={seriesColors.axis} tick={{ fill: seriesColors.axis, fontSize: 11 }} />
-                    <YAxis stroke={seriesColors.axis} tick={{ fill: seriesColors.axis, fontSize: 11 }} />
-                    <Tooltip {...tooltipStyle} />
-                    {showComparison && <Legend wrapperStyle={{ fontSize: '0.78rem' }} />}
-                    <Area type="monotone" dataKey="capital" stroke={seriesColors.success} strokeWidth={2.5} fill="url(#capGrad)" name="USDC Locked" isAnimationActive={chartAnimationEnabled} />
-                    {showComparison && (
-                      <Area type="monotone" dataKey="prevCapital" stroke={seriesColors.comparison} strokeWidth={1.5} fill="url(#prevCapGrad)" name="Prev Period" strokeDasharray="5 3" isAnimationActive={chartAnimationEnabled} />
-                    )}
-                  </AreaChart>
-                </ResponsiveContainer>
+                <>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={displayData}>
+                      <defs>
+                        <linearGradient id="capGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={seriesColors.success} stopOpacity={0.25} />
+                          <stop offset="95%" stopColor={seriesColors.success} stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="prevCapGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={seriesColors.comparison} stopOpacity={0.15} />
+                          <stop offset="95%" stopColor={seriesColors.comparison} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={seriesColors.grid} vertical={false} />
+                      <XAxis dataKey="name" stroke={seriesColors.axis} tick={{ fill: seriesColors.axis, fontSize: 11 }} />
+                      <YAxis stroke={seriesColors.axis} tick={{ fill: seriesColors.axis, fontSize: 11 }} />
+                      <Tooltip {...tooltipStyle} />
+                      <Area type="monotone" dataKey="capital" stroke={seriesColors.success} strokeWidth={2.5} fill="url(#capGrad)" name="USDC Locked" isAnimationActive={chartAnimationEnabled} />
+                      {showComparison && (
+                        <Area type="monotone" dataKey="prevCapital" stroke={seriesColors.comparison} strokeWidth={1.5} fill="url(#prevCapGrad)" name="Prev Period" strokeDasharray="5 3" isAnimationActive={chartAnimationEnabled} />
+                      )}
+                    </AreaChart>
+                  </ResponsiveContainer>
+                  {showComparison && (
+                    <ChartLegend entries={capitalLegendEntries} colors={seriesColors} tokens={chartTokens} />
+                  )}
+                </>
               )}
             </Card>
 
