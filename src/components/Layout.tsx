@@ -50,7 +50,7 @@ export default function Layout({ children }: LayoutProps) {
           </Link>
         </div>
 
-        <nav className="desktop-nav" {...backgroundA11yProps}>
+        <nav className="desktop-nav" aria-label="Main navigation" {...backgroundA11yProps}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <Link
               to="/"
@@ -59,6 +59,7 @@ export default function Layout({ children }: LayoutProps) {
                 color:
                   location.pathname === "/" ? "var(--accent)" : "var(--muted)",
               }}
+              aria-current={location.pathname === "/" ? "page" : undefined}
             >
               <Text role="caption" as="span">
                 Home
@@ -74,6 +75,7 @@ export default function Layout({ children }: LayoutProps) {
                     : "var(--muted)",
                 textDecoration: "none",
               }}
+              aria-current={location.pathname === "/analytics" ? "page" : undefined}
             >
               Analytics
             </Link>
@@ -89,6 +91,7 @@ export default function Layout({ children }: LayoutProps) {
                 fontWeight: 500,
                 fontSize: "0.875rem",
               }}
+              aria-current={location.pathname === "/vaults/create" ? "page" : undefined}
             >
               Create Vault
             </Link>
