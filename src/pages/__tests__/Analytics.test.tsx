@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, act } from 'react'
 import { describe, expect, it, vi, beforeAll } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { buildAnalyticsSeriesColors } from '../analyticsTheme'
 
@@ -157,5 +157,27 @@ describe('Analytics lazy route', () => {
 
     // After the chunk resolves the skeleton must be gone
     await waitFor(() => expect(screen.queryByTestId('skeleton')).toBeNull(), { timeout: 2000 })
+  })
+
+  it('lazy-loads jsPDF on export and shows loading state', async () => {
+    // Import the component synchronously for this interaction test
+    const { default: Analytics } = await import('../Analytics')
+
+    render(
+      <MemoryRouter>
+        <Analytics />
+      </MemoryRouter>,
+    )
+
+    const pdfBtn = screen.getByRole('button', { name: /pdf report/i })
+    expect(pdfBtn).toBeTruthy()
+
+    // Click should enter loading state
+    fireEvent.click(pdfBtn)
+    const loadingBtn = screen.getByRole('button', { name: /loading/i })
+    expect(loadingBtn).toBeDisabled()
+
+    // After export completes the button should return to normal
+    await waitFor(() => expect(screen.getByRole('button', { name: /pdf report/i })).not.toBeDisabled(), { timeout: 2000 })
   })
 })
