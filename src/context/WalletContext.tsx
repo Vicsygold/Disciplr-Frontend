@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { isAllowed, setAllowed, requestAccess, getAddress, getNetworkDetails } from '@stellar/freighter-api';
 import { fetchUsdcBalance } from '../utils/horizon';
 import { logger } from '../utils/logger';
@@ -29,12 +29,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const [balanceError, setBalanceError] = useState<string | null>(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const normalizeNetwork = (networkName: string): WalletNetwork => {
         return networkName === 'PUBLIC' ? 'PUBLIC' : 'TESTNET';
     };
 
     const fetchNetworkAndBalance = async (pubKey: string) => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+
         setBalanceStatus('loading');
         setBalanceError(null);
 
@@ -43,10 +49,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             const activeNetwork = normalizeNetwork(netDetails.network);
             setNetwork(activeNetwork);
 
-            const usdcBalance = await fetchUsdcBalance(pubKey, activeNetwork);
+            const usdcBalance = await fetchUsdcBalance(pubKey, activeNetwork, fetch, {
+                signal: abortControllerRef.current.signal,
+            });
             setBalance(usdcBalance.balance);
             setBalanceStatus(usdcBalance.hasTrustline ? 'success' : 'no_trustline');
         } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') {
+                return;
+            }
             logger.error('Failed to get network details', err);
             const message = err instanceof Error ? err.message : 'Unable to load USDC balance.';
             setBalance(null);
@@ -71,6 +82,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         checkConnection();
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
     }, []);
 
     const connect = async () => {
@@ -101,6 +117,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     };
 
     const disconnect = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
         setAddress(null);
         setNetwork(null);
         setBalance(null);
