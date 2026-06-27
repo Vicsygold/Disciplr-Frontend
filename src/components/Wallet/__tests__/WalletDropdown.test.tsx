@@ -202,7 +202,7 @@ describe('WalletDropdown explorer link', () => {
         vi.useRealTimers();
     });
 
-    test('opens the testnet explorer for testnet wallets', () => {
+    test('opens the testnet explorer for testnet wallets with noopener/noreferrer', () => {
         const open = vi.spyOn(window, 'open').mockImplementation(() => null);
 
         renderDropdown();
@@ -211,12 +211,13 @@ describe('WalletDropdown explorer link', () => {
         expect(open).toHaveBeenCalledWith(
             `https://stellar.expert/explorer/testnet/account/${walletState.address}`,
             '_blank',
+            'noopener,noreferrer',
         );
 
         open.mockRestore();
     });
 
-    test('opens the public explorer for public wallets', () => {
+    test('opens the public explorer for public wallets with noopener/noreferrer', () => {
         const open = vi.spyOn(window, 'open').mockImplementation(() => null);
         walletState.network = 'PUBLIC';
 
@@ -226,23 +227,36 @@ describe('WalletDropdown explorer link', () => {
         expect(open).toHaveBeenCalledWith(
             `https://stellar.expert/explorer/public/account/${walletState.address}`,
             '_blank',
+            'noopener,noreferrer',
         );
 
         open.mockRestore();
     });
 
-    test('opens the public explorer when network is missing', () => {
+    test('falls back to testnet explorer when network is missing', () => {
         const open = vi.spyOn(window, 'open').mockImplementation(() => null);
-        walletState.network = null;
+        walletState.network = null as unknown as WalletNetwork;
 
         renderDropdown();
 
         screen.getByRole('button', { name: /view on stellar explorer/i }).click();
         expect(open).toHaveBeenCalledWith(
-            `https://stellar.expert/explorer/public/account/${walletState.address}`,
+            `https://stellar.expert/explorer/testnet/account/${walletState.address}`,
             '_blank',
+            'noopener,noreferrer',
         );
 
+        open.mockRestore();
+    });
+
+    test('nulls the opener property on the returned window', () => {
+        const mockWindow = { opener: {} as unknown } as Window;
+        const open = vi.spyOn(window, 'open').mockReturnValue(mockWindow);
+
+        renderDropdown();
+        screen.getByRole('button', { name: /view on stellar explorer/i }).click();
+
+        expect(mockWindow.opener).toBeNull();
         open.mockRestore();
     });
 });
