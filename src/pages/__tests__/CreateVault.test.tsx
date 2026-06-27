@@ -2,6 +2,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CreateVault from "../CreateVault";
 
+vi.mock("../../context/WalletContext", () => ({
+  useWallet: vi.fn(() => ({ balance: null, balanceStatus: 'idle' })),
+}));
+
+import { useWallet } from "../../context/WalletContext";
+const mockUseWallet = vi.mocked(useWallet);
+
 const successAddress = `G${"A".repeat(55)}`;
 const failureAddress = `G${"B".repeat(55)}`;
 
@@ -12,6 +19,7 @@ function fillField(label: RegExp, value: string) {
 describe("CreateVault", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    mockUseWallet.mockReturnValue({ balance: null, balanceStatus: 'idle' } as ReturnType<typeof useWallet>);
   });
 
   it("renders accessible inline errors and blocks invalid submissions", () => {
@@ -191,5 +199,62 @@ describe("CreateVault", () => {
       'CreateVault confirm',
       expect.objectContaining({ amount: "1234.5678" }),
     );
+  });
+
+  /* ------------------------------------------------------------------ */
+  /*  Balance warning                                                    */
+  /* ------------------------------------------------------------------ */
+  it("shows insufficient balance warning when amount exceeds balance", () => {
+    mockUseWallet.mockReturnValue({ balance: '50', balanceStatus: 'success' } as ReturnType<typeof useWallet>);
+    render(<CreateVault />);
+
+    fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: "100" } });
+
+    expect(screen.getByRole('status')).toHaveTextContent(/exceeds your available usdc balance/i);
+  });
+
+  it("does not show warning when amount equals balance", () => {
+    mockUseWallet.mockReturnValue({ balance: '100', balanceStatus: 'success' } as ReturnType<typeof useWallet>);
+    render(<CreateVault />);
+
+    fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: "100" } });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it("does not show warning when amount is within balance", () => {
+    mockUseWallet.mockReturnValue({ balance: '200', balanceStatus: 'success' } as ReturnType<typeof useWallet>);
+    render(<CreateVault />);
+
+    fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: "100" } });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it("does not show warning when balance is null (not loaded)", () => {
+    mockUseWallet.mockReturnValue({ balance: null, balanceStatus: 'loading' } as ReturnType<typeof useWallet>);
+    render(<CreateVault />);
+
+    fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: "100" } });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it("does not show warning when wallet is disconnected", () => {
+    mockUseWallet.mockReturnValue({ balance: null, balanceStatus: 'idle' } as ReturnType<typeof useWallet>);
+    render(<CreateVault />);
+
+    fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: "100" } });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it("does not show warning when balanceStatus is no_trustline", () => {
+    mockUseWallet.mockReturnValue({ balance: null, balanceStatus: 'no_trustline' } as ReturnType<typeof useWallet>);
+    render(<CreateVault />);
+
+    fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: "100" } });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });
