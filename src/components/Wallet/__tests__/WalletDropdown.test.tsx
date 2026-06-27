@@ -8,13 +8,22 @@ const walletState = vi.hoisted(() => ({
     balance: '12.0000000' as string | null,
     balanceStatus: 'success' as BalanceStatus,
     balanceError: null as string | null,
-    network: 'TESTNET' as WalletNetwork,
+    network: 'TESTNET' as WalletNetwork | null,
     disconnect: vi.fn(),
 }));
 
 vi.mock('../../../context/WalletContext', () => ({
     useWallet: () => walletState,
 }));
+
+vi.mock('lucide-react', async (importOriginal) => {
+    const original = await importOriginal<typeof import('lucide-react')>();
+    return {
+        ...original,
+        Copy: () => <svg aria-label="copy-icon" />,
+        Check: () => <svg aria-label="check-icon" />,
+    };
+});
 
 function renderDropdown() {
     const onClose = vi.fn();
@@ -25,6 +34,10 @@ function renderDropdown() {
         onSwitch,
         ...render(<WalletDropdown onClose={onClose} onSwitch={onSwitch} />),
     };
+}
+
+function mockClipboard(writeText: ReturnType<typeof vi.fn>) {
+    Object.assign(navigator, { clipboard: { writeText } });
 }
 
 describe('WalletDropdown balance states', () => {
@@ -84,12 +97,60 @@ describe('WalletDropdown balance states', () => {
         expect(container).toBeEmptyDOMElement();
     });
 
-    test('copies the address and opens the public explorer', async () => {
+    test('renders an empty balance fallback for idle state', () => {
+        walletState.balance = null;
+        walletState.balanceStatus = 'idle';
+
+        renderDropdown();
+
+        expect(screen.getByText('-')).toBeInTheDocument();
+    });
+
+    test('calls switch and disconnect actions', () => {
+        const { onClose, onSwitch } = renderDropdown();
+
+        screen.getByRole('button', { name: /switch wallet/i }).click();
+        expect(onSwitch).toHaveBeenCalledTimes(1);
+
+        screen.getByRole('button', { name: /disconnect/i }).click();
+        expect(walletState.disconnect).toHaveBeenCalledTimes(1);
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('WalletDropdown address display', () => {
+    beforeEach(() => {
+        walletState.address = 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+        walletState.balance = '12.0000000';
+        walletState.balanceStatus = 'success';
+        walletState.balanceError = null;
+        walletState.network = 'TESTNET';
+        walletState.disconnect.mockClear();
+        vi.useRealTimers();
+    });
+
+    test('renders the truncated address format', () => {
+        renderDropdown();
+
+        expect(screen.getByText('GABCDE...7890')).toBeInTheDocument();
+    });
+});
+
+describe('WalletDropdown clipboard copy', () => {
+    beforeEach(() => {
+        walletState.address = 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+        walletState.balance = '12.0000000';
+        walletState.balanceStatus = 'success';
+        walletState.balanceError = null;
+        walletState.network = 'TESTNET';
+        walletState.disconnect.mockClear();
+        vi.useRealTimers();
+    });
+
+    test('shows copied state after a successful copy and reverts after 2 seconds', async () => {
         vi.useFakeTimers();
         const writeText = vi.fn().mockResolvedValue(undefined);
-        Object.assign(navigator, { clipboard: { writeText } });
-        const open = vi.spyOn(window, 'open').mockImplementation(() => null);
-        walletState.network = 'PUBLIC';
+        mockClipboard(writeText);
 
         renderDropdown();
 
@@ -97,18 +158,48 @@ describe('WalletDropdown balance states', () => {
             screen.getByTitle('Copy Address').click();
             await Promise.resolve();
         });
-        act(() => {
-            vi.runOnlyPendingTimers();
-        });
+
         expect(writeText).toHaveBeenCalledWith(walletState.address);
+        expect(screen.getByLabelText('check-icon')).toBeInTheDocument();
+        expect(screen.queryByLabelText('copy-icon')).not.toBeInTheDocument();
 
-        screen.getByRole('button', { name: /view on stellar explorer/i }).click();
-        expect(open).toHaveBeenCalledWith(
-            `https://stellar.expert/explorer/public/account/${walletState.address}`,
-            '_blank',
-        );
+        act(() => {
+            vi.advanceTimersByTime(2000);
+        });
 
-        open.mockRestore();
+        expect(screen.getByLabelText('copy-icon')).toBeInTheDocument();
+        expect(screen.queryByLabelText('check-icon')).not.toBeInTheDocument();
+    });
+
+    test('handles clipboard rejection without showing copied state', async () => {
+        mockClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+        const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+        renderDropdown();
+
+        await act(async () => {
+            screen.getByTitle('Copy Address').click();
+            await Promise.resolve();
+        });
+
+        expect(error).toHaveBeenCalledWith('Failed to copy', expect.any(Error));
+        expect(screen.getByLabelText('copy-icon')).toBeInTheDocument();
+        expect(screen.queryByLabelText('check-icon')).not.toBeInTheDocument();
+        expect(screen.getByText('12.0000000')).toBeInTheDocument();
+
+        error.mockRestore();
+    });
+});
+
+describe('WalletDropdown explorer link', () => {
+    beforeEach(() => {
+        walletState.address = 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+        walletState.balance = '12.0000000';
+        walletState.balanceStatus = 'success';
+        walletState.balanceError = null;
+        walletState.network = 'TESTNET';
+        walletState.disconnect.mockClear();
+        vi.useRealTimers();
     });
 
     test('opens the testnet explorer for testnet wallets', () => {
@@ -125,36 +216,33 @@ describe('WalletDropdown balance states', () => {
         open.mockRestore();
     });
 
-    test('handles copy failures without closing the dropdown', async () => {
-        Object.assign(navigator, { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } });
-        const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-
-        renderDropdown();
-        screen.getByTitle('Copy Address').click();
-
-        await screen.findByText('12.0000000');
-        expect(error).toHaveBeenCalledWith('Failed to copy', expect.any(Error));
-
-        error.mockRestore();
-    });
-
-    test('calls switch and disconnect actions', () => {
-        const { onClose, onSwitch } = renderDropdown();
-
-        screen.getByRole('button', { name: /switch wallet/i }).click();
-        expect(onSwitch).toHaveBeenCalledTimes(1);
-
-        screen.getByRole('button', { name: /disconnect/i }).click();
-        expect(walletState.disconnect).toHaveBeenCalledTimes(1);
-        expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
-    test('renders an empty balance fallback for idle state', () => {
-        walletState.balance = null;
-        walletState.balanceStatus = 'idle';
+    test('opens the public explorer for public wallets', () => {
+        const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+        walletState.network = 'PUBLIC';
 
         renderDropdown();
 
-        expect(screen.getByText('-')).toBeInTheDocument();
+        screen.getByRole('button', { name: /view on stellar explorer/i }).click();
+        expect(open).toHaveBeenCalledWith(
+            `https://stellar.expert/explorer/public/account/${walletState.address}`,
+            '_blank',
+        );
+
+        open.mockRestore();
+    });
+
+    test('opens the public explorer when network is missing', () => {
+        const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+        walletState.network = null;
+
+        renderDropdown();
+
+        screen.getByRole('button', { name: /view on stellar explorer/i }).click();
+        expect(open).toHaveBeenCalledWith(
+            `https://stellar.expert/explorer/public/account/${walletState.address}`,
+            '_blank',
+        );
+
+        open.mockRestore();
     });
 });
