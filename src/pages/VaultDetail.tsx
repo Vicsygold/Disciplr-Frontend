@@ -8,6 +8,8 @@ import {
 } from "../components/FundReleaseStatus";
 import { Text } from "../components/Text";
 import { AddressDisplay } from "../components/AddressDisplay";
+import { useWallet } from "../context/WalletContext";
+import { contractExplorerUrl, networkLabel } from "../utils/explorer";
 import type { VaultStatus, MilestoneStatus, TxType } from "../types/vault";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -387,6 +389,7 @@ function Card({
 export default function VaultDetail() {
   const { id } = useParams<{ id: string }>();
   const vault = id ? MOCK_VAULTS[id] : undefined;
+  const { network } = useWallet();
 
   if (!vault) {
     return (
@@ -739,7 +742,111 @@ export default function VaultDetail() {
           ))}
         </div>
       </Card>
+
+      {/* ── Network Footer Banner ── */}
+      <NetworkFooterBanner
+        network={network}
+        contractAddress={vault.contractAddress}
+      />
     </div>
+  );
+}
+
+// ── Network Footer Banner ─────────────────────────────────────────────────────
+interface NetworkFooterBannerProps {
+  network: string | null | undefined;
+  contractAddress: string;
+}
+
+function NetworkFooterBanner({ network, contractAddress }: NetworkFooterBannerProps) {
+  const label = networkLabel(network);
+  const explorerUrl = contractAddress
+    ? contractExplorerUrl(contractAddress, network ?? 'TESTNET')
+    : '';
+
+  const isTestnet = network !== 'PUBLIC';
+
+  return (
+    <footer
+      aria-label="Network information"
+      style={{
+        marginTop: "1.5rem",
+        padding: "0.75rem 1rem",
+        borderRadius: "var(--radius)",
+        border: `1px solid ${isTestnet ? "var(--warning, #f59e0b)" : "var(--success, #10b981)"}`,
+        background: isTestnet
+          ? "rgba(245,158,11,0.07)"
+          : "rgba(16,185,129,0.07)",
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        gap: "0.5rem 1rem",
+      }}
+    >
+      {/* Network badge */}
+      <span
+        aria-label={`Network: ${label}`}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.4rem",
+          fontWeight: 700,
+          fontSize: 12,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: isTestnet
+            ? "var(--warning, #f59e0b)"
+            : "var(--success, #10b981)",
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            display: "inline-block",
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: isTestnet
+              ? "var(--warning, #f59e0b)"
+              : "var(--success, #10b981)",
+          }}
+        />
+        {label}
+      </span>
+
+      {/* Contract address */}
+      {contractAddress && (
+        <Text
+          role="mono"
+          as="span"
+          style={{ color: "var(--muted)", fontSize: 12, flex: 1, minWidth: 0 }}
+          aria-label={`Contract address: ${contractAddress}`}
+        >
+          {contractAddress}
+        </Text>
+      )}
+
+      {/* Explorer link */}
+      {explorerUrl && (
+        <a
+          href={explorerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View contract ${contractAddress} on Stellar ${label} explorer`}
+          style={{
+            color: isTestnet
+              ? "var(--warning, #f59e0b)"
+              : "var(--success, #10b981)",
+            fontSize: 12,
+            fontWeight: 600,
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          View on Explorer ↗
+        </a>
+      )}
+    </footer>
   );
 }
 
