@@ -3,12 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { CountdownDeadline } from '../components/CountdownDeadline';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { Text } from '../components/Text';
+import { VerifierMetricsBar } from '../components/VerifierMetricsBar';
+import { computeVerifierMetrics } from '../utils/verifierMetrics';
 import { useVerifierStore } from '../Zustand/Store';
 import { StatusChip } from '../components/StatusChip';
 
 export default function PendingValidations() {
   const navigate = useNavigate();
-  const { pendingValidations, batchApprove, batchReject } = useVerifierStore();
+  const { pendingValidations, validationHistory, batchApprove, batchReject } = useVerifierStore();
+
+  // Queue-at-a-glance metrics for the strip above the table.
+  const metrics = useMemo(
+    () => computeVerifierMetrics(pendingValidations, validationHistory),
+    [pendingValidations, validationHistory],
+  );
 
   // Optional: Simple state to handle sorting by days remaining
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -101,6 +109,8 @@ export default function PendingValidations() {
           Sort by Urgency: {sortOrder === 'asc' ? 'High to Low' : 'Low to High'}
         </button>
       </header>
+
+      <VerifierMetricsBar metrics={metrics} />
 
       <section className="border rounded-lg shadow-sm overflow-x-auto" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>
         {sortedValidations.length === 0 ? (
