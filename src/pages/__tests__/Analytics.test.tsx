@@ -1,10 +1,10 @@
-import React, { Suspense, lazy, act } from 'react'
+﻿import React, { Suspense, lazy, act } from 'react'
 import { describe, expect, it, vi, beforeAll } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { buildAnalyticsSeriesColors } from '../analyticsTheme'
 
-// ── Browser API stubs (jsdom doesn't implement these) ─────────────────────────
+// â”€â”€ Browser API stubs (jsdom doesn't implement these) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {
@@ -22,7 +22,7 @@ beforeAll(() => {
   })
 })
 
-// ── Heavy dep mocks ───────────────────────────────────────────────────────────
+// â”€â”€ Heavy dep mocks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
@@ -69,7 +69,7 @@ vi.mock('../../context/ThemeContext', () => ({
   useTheme: () => ({ theme: 'light', toggleTheme: () => {} }),
 }))
 
-// ── Theme mapping tests ───────────────────────────────────────────────────────
+// â”€â”€ Theme mapping tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const tokenFixture = {
   accent: 'accent-token',
@@ -118,7 +118,7 @@ export const analyticsThemeCoverage = [
   'axis/grid/tooltip colors map to neutral surface tokens',
 ]
 
-// ── Lazy-route / Suspense tests ───────────────────────────────────────────────
+// â”€â”€ Lazy-route / Suspense tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('Analytics lazy route', () => {
   it('Suspense renders skeleton fallback before chunk resolves', async () => {
@@ -181,3 +181,4 @@ describe('Analytics lazy route', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /pdf report/i })).not.toBeDisabled(), { timeout: 2000 })
   })
 })
+
