@@ -9,6 +9,7 @@ import {
 import { EvidenceUpload } from "../components/EvidenceUpload";
 import { CreateVaultReview } from "../components/CreateVaultReview";
 import { formatUsdcInput, parseUsdcInput } from "../utils/usdcInput";
+import { logger } from "../utils/logger";
 
 export default function CreateVault() {
   const [amount, setAmount] = useState("");
@@ -35,7 +36,7 @@ export default function CreateVault() {
 
   const handleConfirm = () => {
     // Placeholder: will call backend / contract
-    console.log({
+    logger.debug('CreateVault confirm', {
       amount,
       deadline,
       successAddress,

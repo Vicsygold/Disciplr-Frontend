@@ -15,8 +15,8 @@ describe("CreateVault", () => {
   });
 
   it("renders accessible inline errors and blocks invalid submissions", () => {
-    const consoleLog = vi
-      .spyOn(console, "log")
+    const consoleDebug = vi
+      .spyOn(console, "debug")
       .mockImplementation(() => undefined);
     render(<CreateVault />);
 
@@ -38,7 +38,7 @@ describe("CreateVault", () => {
       "aria-describedby",
       "field-amount-(usdc)-error",
     );
-    expect(consoleLog).not.toHaveBeenCalled();
+    expect(consoleDebug).not.toHaveBeenCalled();
   });
 
   it("rejects identical destination addresses", () => {
@@ -62,8 +62,8 @@ describe("CreateVault", () => {
   });
 
   it("shows the review step for valid values and confirms once", () => {
-    const consoleLog = vi
-      .spyOn(console, "log")
+    const consoleDebug = vi
+      .spyOn(console, "debug")
       .mockImplementation(() => undefined);
     render(<CreateVault />);
 
@@ -82,13 +82,14 @@ describe("CreateVault", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /confirm vault/i }));
 
-    expect(consoleLog).toHaveBeenCalledWith({
+    expect(consoleDebug).toHaveBeenCalledWith('CreateVault confirm', {
       amount: "100.1234567",
       deadline: "2030-01-01T00:00",
       successAddress,
       failureAddress,
+      evidenceUrl: undefined,
     });
-    expect(consoleLog).toHaveBeenCalledTimes(1);
+    expect(consoleDebug).toHaveBeenCalledTimes(1);
   });
 
   it("returns to edit mode without losing entered values", () => {
@@ -162,8 +163,8 @@ describe("CreateVault", () => {
   });
 
   it("keeps underlying raw value compatible with isValidUsdcAmount", () => {
-    const consoleLog = vi
-      .spyOn(console, "log")
+    const consoleDebug = vi
+      .spyOn(console, "debug")
       .mockImplementation(() => undefined);
     render(<CreateVault />);
 
@@ -186,7 +187,8 @@ describe("CreateVault", () => {
 
     // The raw amount passed to the confirm handler should not have commas
     // and should be compatible with isValidUsdcAmount
-    expect(consoleLog).toHaveBeenCalledWith(
+    expect(consoleDebug).toHaveBeenCalledWith(
+      'CreateVault confirm',
       expect.objectContaining({ amount: "1234.5678" }),
     );
   });

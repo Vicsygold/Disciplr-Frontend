@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { isAllowed, setAllowed, requestAccess, getAddress, getNetworkDetails } from '@stellar/freighter-api';
 import { fetchUsdcBalance } from '../utils/horizon';
+import { logger } from '../utils/logger';
 
 export type WalletNetwork = 'TESTNET' | 'PUBLIC';
 export type BalanceStatus = 'idle' | 'loading' | 'success' | 'no_trustline' | 'error';
@@ -46,7 +47,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             setBalance(usdcBalance.balance);
             setBalanceStatus(usdcBalance.hasTrustline ? 'success' : 'no_trustline');
         } catch (err) {
-            console.error('Failed to get network details', err);
+            logger.error('Failed to get network details', err);
             const message = err instanceof Error ? err.message : 'Unable to load USDC balance.';
             setBalance(null);
             setBalanceStatus('error');
@@ -64,7 +65,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
                 }
             }
         } catch (err) {
-            console.error('Check connection error', err);
+            logger.error('Check connection error', err);
         }
     };
 
@@ -91,7 +92,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
                 setError('Wallet access denied.');
             }
         } catch (err: unknown) {
-            console.error('Connection error', err);
+            logger.error('Connection error', err);
             const message = err instanceof Error ? err.message : undefined;
             setError(message || 'Failed to connect wallet. Make sure Freighter is installed and unlocked.');
         } finally {
