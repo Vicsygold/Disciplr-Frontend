@@ -338,4 +338,33 @@ describe('Layout mobile nav controls', () => {
     const btn = screen.getByRole('button', { name: /open navigation menu/i });
     expect(btn).toHaveAttribute('aria-expanded', 'false');
   });
+
+  test('opening the drawer hides the background brand region and main content', () => {
+    const { container } = renderLayout('/');
+    const button = screen.getByRole('button', { name: /open navigation menu/i });
+    const brandRegion = container.querySelector('.header-brand');
+    const main = screen.getByRole('main');
+
+    expect(brandRegion).toBeInTheDocument();
+    expect(brandRegion).not.toHaveAttribute('aria-hidden');
+    expect(brandRegion).not.toHaveAttribute('inert');
+    expect(main).not.toHaveAttribute('aria-hidden');
+    expect(main).not.toHaveAttribute('inert');
+
+    fireEvent.click(button);
+
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    expect(brandRegion).toHaveAttribute('aria-hidden', 'true');
+    expect(brandRegion).toHaveAttribute('inert', '');
+    expect(main).toHaveAttribute('aria-hidden', 'true');
+    expect(main).toHaveAttribute('inert', '');
+
+    fireEvent.click(button);
+
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(brandRegion).not.toHaveAttribute('aria-hidden');
+    expect(brandRegion).not.toHaveAttribute('inert');
+    expect(main).not.toHaveAttribute('aria-hidden');
+    expect(main).not.toHaveAttribute('inert');
+  });
 });
