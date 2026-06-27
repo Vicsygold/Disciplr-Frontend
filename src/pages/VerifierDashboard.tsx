@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Text } from '../components/Text';
 import { useVerifierStore } from '../Zustand/Store';
+import VerifierMetrics from '../components/VerifierMetrics';
 
 export default function VerifierDashboard() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function VerifierDashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
+      <VerifierMetrics />
       <header className="mb-4">
         <Text role="display" as="h1">Verifier Dashboard</Text>
         <Text role="body" as="p" className="mt-1" style={{ color: 'var(--muted)' }}>
