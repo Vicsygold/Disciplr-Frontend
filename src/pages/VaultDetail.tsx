@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MilestoneTracker } from "../components/MilestoneTracker";
 import { VaultProgressBar } from "../components/VaultProgressBar";
@@ -8,6 +7,7 @@ import {
   type FundReleaseStatusProps,
 } from "../components/FundReleaseStatus";
 import { Text } from "../components/Text";
+import { AddressDisplay } from "../components/AddressDisplay";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type VaultStatus =
@@ -284,10 +284,6 @@ const TX_LABELS: Record<string, string> = {
   redirect: "Funds Redirected",
 };
 
-function truncAddr(addr: string): string {
-  return addr.length > 12 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
-}
-
 function truncHash(hash: string): string {
   return hash.length > 12 ? `${hash.slice(0, 8)}...${hash.slice(-6)}` : hash;
 }
@@ -348,34 +344,6 @@ function settlementForVault(vault: Vault): FundReleaseStatusProps {
   };
 }
 
-// ── Copy Button ───────────────────────────────────────────────────────────────
-function CopyButton({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(value).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  };
-  return (
-    <button
-      onClick={copy}
-      title="Copy"
-      style={{
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-        color: copied ? "var(--success)" : "var(--muted)",
-        padding: "0 4px",
-        fontSize: 13,
-        lineHeight: 1,
-      }}
-    >
-      {copied ? "✓" : "⎘"}
-    </button>
-  );
-}
-
 // ── Address Row ───────────────────────────────────────────────────────────────
 function AddrRow({ label, value }: { label: string; value: string }) {
   return (
@@ -395,12 +363,7 @@ function AddrRow({ label, value }: { label: string; value: string }) {
       >
         {label}
       </Text>
-      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-        <Text role="mono" as="span" style={{ color: "var(--text)" }}>
-          {truncAddr(value)}
-        </Text>
-        <CopyButton value={value} />
-      </div>
+      <AddressDisplay address={value} />
     </div>
   );
 }
@@ -752,7 +715,24 @@ export default function VaultDetail() {
                   >
                     {truncHash(tx.hash)}
                   </Text>
-                  <CopyButton value={tx.hash} />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(tx.hash).catch(() => {});
+                    }}
+                    title="Copy hash"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--muted)",
+                      padding: "0 4px",
+                      fontSize: 13,
+                      lineHeight: 1,
+                    }}
+                  >
+                    ⎘
+                  </button>
                   <a
                     href={`https://stellar.expert/explorer/public/tx/${tx.hash}`}
                     target="_blank"

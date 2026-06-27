@@ -62,3 +62,52 @@ component path exists before opening the PR.
 - `documentation/chart-palette.md` documents analytics chart color usage.
 - `documentation/field.md` and `documentation/confirmation-modal.md` document
   component-level accessibility behavior.
+
+## AddressDisplay Component
+
+`src/components/AddressDisplay.tsx` renders a Stellar address with consistent
+truncation, a copy-to-clipboard button, and an optional Stellar Expert explorer
+link.
+
+```tsx
+import { AddressDisplay } from '../components/AddressDisplay';
+
+// Basic – truncation + copy only
+<AddressDisplay address="GBVZ3KQKM4XNQPBEZMXPOLKQKM4XNQPBEZMXPOLKQK7L" />
+
+// With explorer link
+<AddressDisplay
+  address="GBVZ3KQKM4XNQPBEZMXPOLKQKM4XNQPBEZMXPOLKQK7L"
+  network="TESTNET"
+/>
+
+// Custom head/tail char counts
+<AddressDisplay address={addr} chars={8} tailChars={6} />
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `address` | `string` | — | Full Stellar address to display. |
+| `network` | `'TESTNET' \| 'PUBLIC' \| null` | `undefined` | When provided, renders an explorer link to `stellar.expert`. Omit or pass `null` to hide. |
+| `chars` | `number` | `6` | Characters to keep at the start of the truncated display. |
+| `tailChars` | `number` | `4` | Characters to keep at the end of the truncated display. |
+
+### Accessibility
+
+- The full address is always present in `title` and `aria-label` on the display
+  `<span>`, ensuring screen readers and tooltips expose the complete value.
+- The copy button's `aria-label` switches from `"Copy address"` to `"Copied"`
+  for 1.5 s so screen readers announce the success state.
+- The explorer link carries an `aria-label` describing both the address and the
+  destination (`"View <address> on Stellar Expert"`).
+
+### Usage Guidelines
+
+- Use `AddressDisplay` everywhere a Stellar address appears in the UI instead
+  of ad-hoc truncation helpers (`truncAddr`, manual `slice` calls, etc.).
+- Pass the `network` prop whenever the connected wallet's network is available
+  so the explorer link points to the correct network.
+- The component uses `var(--success)`, `var(--muted)`, and `var(--accent)` CSS
+  variables; it inherits correctly in both light and dark themes.
