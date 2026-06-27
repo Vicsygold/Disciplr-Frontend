@@ -1,7 +1,5 @@
-import { act } from 'react';
-import { render, screen } from '@testing-library/react';
-import { WalletDropdown } from '../WalletDropdown';
-import type { BalanceStatus, WalletNetwork } from '../../../context/WalletContext';
+import { vi, describe, beforeEach, it, expect } from 'vitest';
+import type { BalanceStatus, WalletNetwork } from '@/context/WalletContext';
 
 const walletState = vi.hoisted(() => ({
     address: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
@@ -12,7 +10,7 @@ const walletState = vi.hoisted(() => ({
     disconnect: vi.fn(),
 }));
 
-vi.mock('../../../context/WalletContext', () => ({
+vi.mock('@/context/WalletContext', () => ({
     useWallet: () => walletState,
 }));
 
@@ -24,6 +22,10 @@ vi.mock('lucide-react', async (importOriginal) => {
         Check: () => <svg aria-label="check-icon" />,
     };
 });
+
+import { act } from 'react';
+import { render, screen } from '@testing-library/react';
+import { WalletDropdown } from '../WalletDropdown';
 
 function renderDropdown() {
     const onClose = vi.fn();
