@@ -23,7 +23,7 @@ from a live Horizon account query. Components read these values through
 network-specific USDC issuer address from `USDC_ISSUERS[network]` in
 `src/utils/horizon.ts` so the user knows exactly which asset to trust.
 
-- Uses `var(--warning)` and `var(--surface)` design tokens — no hardcoded colors.
+- Uses `var(--warning)` and `var(--surface)` design tokens - no hardcoded colors.
 - Dismissible per session via local React state (re-appears on page reload).
 - Mounted globally in `Layout.tsx` so every page benefits.
 
@@ -45,8 +45,7 @@ import { TrustlineBanner } from './TrustlineBanner';
 `useWallet()` and shows a non-blocking inline warning when the entered amount
 exceeds the available balance.
 
-- Warning is soft: the submit button is **not** disabled by an insufficient
-  balance.
+- Warning is soft: the submit button is not disabled by an insufficient balance.
 - Only shown when `balanceStatus === 'success'` (known, positive balance).
 - Powered by `exceedsBalance(amount, balance)` in
   `src/utils/vaultValidation.ts`.
@@ -60,3 +59,13 @@ exceedsBalance(amount: string, balance: string | null): boolean
 Returns `true` only when both values parse as finite numbers and `amount > balance`.
 Returns `false` for `null` balance, unparseable strings, or equal values, making
 it safe to call when the balance has not yet loaded.
+
+## Fetch behavior
+
+- `TESTNET` accounts query `https://horizon-testnet.stellar.org`.
+- `PUBLIC` accounts query `https://horizon.stellar.org`.
+- The balance helper only accepts the configured Circle USDC issuer for the active network.
+- The matched USDC trustline balance must also be a finite numeric string; malformed or missing balance values are treated as an invalid Horizon response.
+- Accounts without that USDC trustline show `0.00 USDC` with a no-trustline note.
+- Horizon request failures and missing accounts show a balance-unavailable state instead of a stale or mocked value.
+- The dropdown renders a loading state while the Horizon request is in flight.

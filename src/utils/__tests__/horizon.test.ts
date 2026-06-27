@@ -60,6 +60,26 @@ describe('horizon wallet balance helpers', () => {
         });
     });
 
+    test('throws an invalid-response error when the matching USDC balance is malformed', async () => {
+        const fetcher = vi.fn().mockResolvedValue(
+            mockResponse(200, {
+                balances: [
+                    {
+                        asset_type: 'credit_alphanum4',
+                        asset_code: 'USDC',
+                        asset_issuer: USDC_ISSUERS.PUBLIC,
+                        balance: 'NaN',
+                    },
+                ],
+            }),
+        );
+
+        await expect(fetchUsdcBalance('GPUBLIC', 'PUBLIC', fetcher)).rejects.toMatchObject({
+            code: 'INVALID_RESPONSE',
+            message: 'Horizon USDC balance was missing or not a finite numeric string.',
+        });
+    });
+
     test('throws an account-not-found error for Horizon 404 responses', async () => {
         const fetcher = vi.fn().mockResolvedValue(mockResponse(404, {}));
 
