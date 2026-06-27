@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useWallet } from '../../context/WalletContext';
 import { Copy, Plus, LogOut, Check, ExternalLink } from 'lucide-react';
+import { getExplorerAccountUrl } from '../../utils/explorer';
 import './wallet.css';
 
 interface WalletDropdownProps {
@@ -29,10 +30,9 @@ export function WalletDropdown({ onClose, onSwitch }: WalletDropdownProps) {
     };
 
     const openExplorer = () => {
-        const baseUrl = network === 'TESTNET'
-            ? 'https://stellar.expert/explorer/testnet'
-            : 'https://stellar.expert/explorer/public';
-        window.open(`${baseUrl}/account/${address}`, '_blank');
+        const url = getExplorerAccountUrl(address, network);
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        if (newWindow) newWindow.opener = null;
     };
 
     const renderBalance = () => {
