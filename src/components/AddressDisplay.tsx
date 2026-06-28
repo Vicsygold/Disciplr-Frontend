@@ -1,4 +1,5 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
+import { truncateMiddle } from '../utils/truncate';
 import type { WalletNetwork } from '../context/WalletContext';
 
 interface AddressDisplayProps {
@@ -11,10 +12,7 @@ interface AddressDisplayProps {
     tailChars?: number;
 }
 
-function truncate(addr: string, head: number, tail: number): string {
-    if (addr.length <= head + tail + 3) return addr;
-    return `${addr.slice(0, head)}...${addr.slice(-tail)}`;
-}
+
 
 export function AddressDisplay({
     address,
@@ -24,7 +22,7 @@ export function AddressDisplay({
 }: AddressDisplayProps) {
     const [copied, setCopied] = useState(false);
 
-    const display = truncate(address, chars, tailChars);
+    const display = truncateMiddle(address, chars, tailChars);
 
     const copy = () => {
         navigator.clipboard.writeText(address).then(() => {
@@ -64,7 +62,7 @@ export function AddressDisplay({
                     lineHeight: 1,
                 }}
             >
-                {copied ? '✓' : '⎘'}
+                {copied ? 'âœ“' : 'âŽ˜'}
             </button>
 
             {network != null && (
@@ -76,9 +74,10 @@ export function AddressDisplay({
                     aria-label={`View ${address} on Stellar Expert`}
                     style={{ color: 'var(--accent)', fontSize: 12, lineHeight: 1 }}
                 >
-                    ↗
+                    â†—
                 </a>
             )}
         </span>
     );
 }
+
