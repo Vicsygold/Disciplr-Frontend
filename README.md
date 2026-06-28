@@ -207,6 +207,12 @@ disciplr-frontend/
 |   |-- context/
 |   |   |-- ThemeContext.tsx
 |   |   `-- WalletContext.tsx
+|   |-- fixtures/
+|   |   |-- dashboard.ts
+|   |   |-- transactions.ts
+|   |   |-- validations.ts
+|   |   |-- vaults.ts
+|   |   `-- index.ts
 |   |-- pages/
 |   |   |-- __tests__/
 |   |   |-- Analytics.tsx
@@ -234,9 +240,32 @@ disciplr-frontend/
 `-- README.md
 ```
 
+## Mock Fixtures Seam
+
+All page mock/seed data is centralized under `src/fixtures/` behind a typed
+seam, so swapping in real backends touches only the data layer:
+
+- `src/fixtures/vaults.ts` — the master vault dataset (`MASTER_VAULTS`).
+- `src/fixtures/transactions.ts` — the all-vaults activity feed
+  (`MASTER_ACTIVITY`).
+- `src/fixtures/dashboard.ts` — Dashboard seed data (`SUMMARY`, `ACTIVITY`,
+  `DEADLINES`, `CHART_DATA`).
+- `src/fixtures/validations.ts` — verifier-store seed data (`initialPending`,
+  `initialHistory`).
+- `src/fixtures/index.ts` — barrel re-export for all of the above.
+
+Fixture types reuse the canonical definitions in `src/types/` and
+`src/services/vaultService.ts` rather than redefining them. The vault and
+transaction fixtures feed the Promise-based service in
+`src/services/vaultService.ts`; see
+[docs/VAULT_DATA_LAYER.md](docs/VAULT_DATA_LAYER.md) for that seam and the
+backend migration plan.
+
 ## Contributor Notes
 
 - Keep route documentation aligned with `src/App.tsx`.
+- Keep mock/seed data in `src/fixtures/` and cross-reference
+  [docs/VAULT_DATA_LAYER.md](docs/VAULT_DATA_LAYER.md).
 - Keep wallet documentation aligned with `src/context/WalletContext.tsx` and
   `src/components/Wallet/`.
 - Keep token and validator documentation aligned with the `design-system/`
