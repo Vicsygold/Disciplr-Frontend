@@ -1,0 +1,45 @@
+.vault-progress-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  width: 100%;
+}
+
+.vault-progress-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  color: var(--muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+.vault-progress-bar-label {
+  font-weight: 600;
+}
+
+.vault-progress-bar-value {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.vault-progress-bar-track {
+  width: 100%;
+  height: var(--spacing-2);
+  overflow: hidden;
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+
+.vault-progress-bar-fill {
+  height: 100%;
+  min-width: 0;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.vault-progress-bar.is-complete .vault-progress-bar-fill {
+  background: var(--success);
+}

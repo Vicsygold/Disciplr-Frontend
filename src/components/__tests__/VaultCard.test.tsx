@@ -1,0 +1,124 @@
+// VaultCard component unit tests
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import VaultCard, {
+  VaultCardProps,
+  deadlineUrgency,
+  URGENCY_CRITICAL_MS,
+  URGENCY_SOON_MS,
+} from '../../components/VaultCard';
+
+// Freeze time for consistent deadline calculations
+const fixedNow = new Date('2024-07-01T00:00:00Z');
+vi.useFakeTimers();
+vi.setSystemTime(fixedNow);
+
+describe('deadlineUrgency', () => {
+  const now = fixedNow;
+
+  it('returns critical when <= 24 h remain', () => {
+    const deadline = new Date(now.getTime() + URGENCY_CRITICAL_MS - 1000).toISOString();
+    expect(deadlineUrgency(deadline, now)).toBe('critical');
+  });
+
+  it('returns soon when > 24 h and <= 7 d remain', () => {
+    const justOverCritical = new Date(now.getTime() + URGENCY_CRITICAL_MS + 60_000).toISOString();
+    const justUnderSafe = new Date(now.getTime() + URGENCY_SOON_MS - 60_000).toISOString();
+    expect(deadlineUrgency(justOverCritical, now)).toBe('soon');
+    expect(deadlineUrgency(justUnderSafe, now)).toBe('soon');
+  });
+
+  it('returns safe when > 7 d remain', () => {
+    const deadline = new Date(now.getTime() + URGENCY_SOON_MS + 60_000).toISOString();
+    expect(deadlineUrgency(deadline, now)).toBe('safe');
+  });
+
+  it('returns safe for expired deadlines', () => {
+    expect(deadlineUrgency('2024-06-01T00:00:00Z', now)).toBe('safe');
+  });
+
+  it('returns safe for invalid deadline strings', () => {
+    expect(deadlineUrgency('not-a-date', now)).toBe('safe');
+  });
+});
+
+describe('VaultCard', () => {
+  const baseProps: VaultCardProps = {
+    id: '1',
+    name: 'Alpha Vault',
+    amount: 12500,
+    currency: 'USDC',
+    status: 'active',
+    deadline: '2024-07-15T10:00:00Z',
+    progressPct: 0,
+  };
+
+  const renderCard = (props = baseProps) =>
+    render(
+      <MemoryRouter>
+        <VaultCard {...props} />
+      </MemoryRouter>
+    );
+
+  it('renders vault name and amount', () => {
+    renderCard();
+    expect(screen.getByText('Alpha Vault')).toBeInTheDocument();
+    expect(screen.getByText('12,500 USDC')).toBeInTheDocument();
+  });
+
+  it('renders live countdown deadline', () => {
+    renderCard();
+    expect(screen.getByLabelText(/Deadline Jul 15, 2024/)).toHaveTextContent('14d 10h remaining');
+  });
+
+  it('displays correct status badge', () => {
+    renderCard();
+    const badge = screen.getByText('Active');
+    expect(badge).toBeInTheDocument();
+    // Badge should use the accent color variable
+    expect(badge).toHaveStyle({ color: 'var(--accent)' });
+  });
+
+  it('renders an accessible vault progress bar', () => {
+    renderCard({ ...baseProps, progressPct: 42 });
+
+    expect(
+      screen.getByRole('progressbar', { name: 'Alpha Vault progress' })
+    ).toHaveAttribute('aria-valuenow', '42');
+    expect(screen.getByText('42%')).toBeInTheDocument();
+  });
+
+  it('shows no urgency badge when deadline is safe (> 7 d)', () => {
+    renderCard({ ...baseProps, deadline: '2024-07-15T10:00:00Z' });
+    expect(screen.queryByLabelText(/Critical|Deadline approaching/)).not.toBeInTheDocument();
+  });
+
+  it('shows "Due soon" badge with warning color for soon deadlines (1–7 d)', () => {
+    const deadline = new Date(fixedNow.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    renderCard({ ...baseProps, deadline });
+    const badge = screen.getByLabelText('Deadline approaching: due within 7 days');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveTextContent('Due soon');
+    expect(badge).toHaveStyle({ color: 'var(--warning)' });
+  });
+
+  it('shows "Expires soon!" badge with danger color for critical deadlines (<= 24 h)', () => {
+    const deadline = new Date(fixedNow.getTime() + 6 * 60 * 60 * 1000).toISOString();
+    renderCard({ ...baseProps, deadline });
+    const badge = screen.getByLabelText('Critical: expires within 24 hours');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveTextContent('Expires soon!');
+    expect(badge).toHaveStyle({ color: 'var(--danger)' });
+  });
+
+  it.each(['completed', 'failed'] as const)(
+    'shows no urgency badge for terminal status "%s"',
+    (status) => {
+      const deadline = new Date(fixedNow.getTime() + 6 * 60 * 60 * 1000).toISOString();
+      renderCard({ ...baseProps, status, deadline });
+      expect(screen.queryByLabelText(/Critical|Deadline approaching/)).not.toBeInTheDocument();
+    }
+  );
+});

@@ -28,7 +28,7 @@ export const Text = React.forwardRef<HTMLElement, TextProps>(
       ? `${typographyClass} ${className}`
       : typographyClass
 
-    return React.createElement(Component as any, {
+    return React.createElement(Component as React.ElementType, {
       ref,
       className: mergedClassName,
       ...props,

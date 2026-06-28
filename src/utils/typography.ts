@@ -6,7 +6,7 @@
  * // Returns 'text-display' which handles responsive sizing
  */
 
-export type TypographyRole = 'display' | 'title' | 'body' | 'caption' | 'mono';
+export type TypographyRole = 'display' | 'title' | 'subtitle' | 'body' | 'caption' | 'mono';
 
 /**
  * Maps a typography role to its corresponding CSS class
@@ -19,6 +19,7 @@ export function getTypographyClass(role: TypographyRole): string {
   const classMap: Record<TypographyRole, string> = {
     display: 'text-display',
     title: 'text-title',
+    subtitle: 'text-subtitle',
     body: 'text-body',
     caption: 'text-caption',
     mono: 'text-mono',

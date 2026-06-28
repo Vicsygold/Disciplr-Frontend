@@ -1,16 +1,29 @@
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import './Layout.css';
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
+  const handleKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleTheme();
+    }
+  };
+
   return (
     <button
+      type="button"
+      className="theme-toggle"
       onClick={toggleTheme}
+      onKeyDown={handleKeyDown}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+      aria-pressed={theme === 'dark'}
       style={{
         background: 'transparent',
-        border: '1px solid var(--border)',
-        borderRadius: '9999px',
+        border: 'var(--border-width-1) solid var(--border)',
+        borderRadius: 'var(--radius-full)',
         width: '2.5rem',
         height: '2.5rem',
         display: 'flex',
@@ -19,14 +32,6 @@ export default function ThemeToggle() {
         cursor: 'pointer',
         color: 'var(--text)',
         transition: 'all var(--duration-normal) var(--ease-in-out)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'var(--hover)';
-        e.currentTarget.style.borderColor = 'var(--accent)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'transparent';
-        e.currentTarget.style.borderColor = 'var(--border)';
       }}
     >
       {theme === 'light' ? (
