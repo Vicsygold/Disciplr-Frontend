@@ -7,6 +7,7 @@ import NavLink from "./NavLink";
 import { Text } from "./Text";
 import { TrustlineBanner } from "./TrustlineBanner";
 import NotificationBell from "./Notification/NotificationBell";
+import { ShortcutsHelp } from "./ShortcutsHelp";
 import "./Layout.css";
 
 interface LayoutProps {
@@ -119,6 +120,7 @@ export default function Layout({ children }: LayoutProps) {
       >
         {children}
       </main>
+      <ShortcutsHelp />
     </div>
   );
 }
