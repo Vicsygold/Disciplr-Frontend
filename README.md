@@ -4,6 +4,10 @@ Frontend for Disciplr, a Stellar-oriented vault application for programmable,
 time-locked capital, verifier workflows, wallet connection, analytics, and
 notification surfaces.
 
+> Architecture overview: see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for
+> routing, provider/context nesting, stores, the utility layer, and the data
+> seam.
+
 ## What It Does
 
 - Create and inspect USDC vaults with deadlines, success destinations, failure
