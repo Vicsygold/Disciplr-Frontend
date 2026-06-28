@@ -202,16 +202,16 @@ export default function VaultTransactions() {
     transactions,
   ]);
 
-  const pending = filtered.filter((t) => t.status === "pending");
-  const failed = filtered.filter((t) => t.status === "failed");
-  const rest = filtered.filter((t) => t.status === "confirmed");
+  const pending = useMemo(() => filtered.filter((t) => t.status === "pending"), [filtered]);
+  const failed = useMemo(() => filtered.filter((t) => t.status === "failed"), [filtered]);
+  const rest = useMemo(() => filtered.filter((t) => t.status === "confirmed"), [filtered]);
 
   // Reset window anchor when filters change so the user always sees the top.
   // windowRange is applied per-section; each section independently does not
   // exceed WINDOW_THRESHOLD in typical use, but large "confirmed" lists will.
-  const pendingWindow = windowRange(pending, anchorIndex);
-  const failedWindow = windowRange(failed, anchorIndex);
-  const restWindow = windowRange(rest, anchorIndex);
+  const pendingWindow = useMemo(() => windowRange(pending, anchorIndex), [pending, anchorIndex]);
+  const failedWindow = useMemo(() => windowRange(failed, anchorIndex), [failed, anchorIndex]);
+  const restWindow = useMemo(() => windowRange(rest, anchorIndex), [rest, anchorIndex]);
 
   const stats = useMemo(
     () => ({
@@ -609,6 +609,7 @@ const TxRow = memo(function TxRow({ tx, onSelect, onCopy, copiedId, children }: 
           <Tooltip content={tx.hash} position="top">
             <button
               className="vt-tx-hash"
+              title="Copy hash"
               onClick={(e) => {
                 e.stopPropagation();
                 onCopy(tx.hash, tx.id + "-hash");
