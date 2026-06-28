@@ -287,3 +287,7 @@ backend migration plan.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the dual Vitest + Jest test setup, branch naming, and PR conventions.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a summary of notable changes to this project.
