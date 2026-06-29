@@ -8,7 +8,7 @@ import {
   type FundReleaseStatusProps,
 } from "../components/FundReleaseStatus";
 import { Text } from "../components/Text";
-import { AddressDisplay } from "../components/AddressDisplay";
+import { VaultMetaPanel } from "../components/VaultMetaPanel";
 import { useWallet } from "../context/WalletContext";
 import { contractExplorerUrl, networkLabel } from "../utils/explorer";
 import type { VaultStatus, MilestoneStatus, TxType, Vault, Milestone, VaultTransaction } from "../types/vault";
@@ -120,30 +120,6 @@ function settlementForVault(vault: Vault): FundReleaseStatusProps {
     amount: vault.amount,
     currency: vault.currency,
   };
-}
-
-// ── Address Row ───────────────────────────────────────────────────────────────
-function AddrRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 8,
-        flexWrap: "wrap",
-      }}
-    >
-      <Text
-        role="caption"
-        as="span"
-        style={{ color: "var(--muted)", minWidth: 140 }}
-      >
-        {label}
-      </Text>
-      <AddressDisplay address={value} />
-    </div>
-  );
 }
 
 // ── Section Card ─────────────────────────────────────────────────────────────
@@ -399,29 +375,14 @@ export default function VaultDetail() {
         </Card>
 
         <Card>
-          <Text
-            role="caption"
-            as="div"
-            style={{
-              color: "var(--muted)",
-              marginBottom: "1rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
-            Addresses
-          </Text>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}
-          >
-            <AddrRow label="Creator" value={vault.creatorAddress} />
-            {vault.verifierAddress && (
-              <AddrRow label="Verifier" value={vault.verifierAddress} />
-            )}
-            <AddrRow label="Success destination" value={vault.successAddress} />
-            <AddrRow label="Failure destination" value={vault.failureAddress} />
-            <AddrRow label="Contract" value={vault.contractAddress} />
-          </div>
+          <VaultMetaPanel
+            network={network}
+            creatorAddress={vault.creatorAddress}
+            verifierAddress={vault.verifierAddress}
+            successAddress={vault.successAddress}
+            failureAddress={vault.failureAddress}
+            contractAddress={vault.contractAddress}
+          />
         </Card>
       </div>
 
@@ -561,13 +522,16 @@ interface NetworkFooterBannerProps {
   contractAddress: string;
 }
 
-function NetworkFooterBanner({ network, contractAddress }: NetworkFooterBannerProps) {
+function NetworkFooterBanner({
+  network,
+  contractAddress,
+}: NetworkFooterBannerProps) {
   const label = networkLabel(network);
   const explorerUrl = contractAddress
-    ? contractExplorerUrl(contractAddress, network ?? 'TESTNET')
-    : '';
+    ? contractExplorerUrl(contractAddress, network ?? "TESTNET")
+    : "";
 
-  const isTestnet = network !== 'PUBLIC';
+  const isTestnet = network !== "PUBLIC";
 
   return (
     <footer
@@ -576,7 +540,9 @@ function NetworkFooterBanner({ network, contractAddress }: NetworkFooterBannerPr
         marginTop: "1.5rem",
         padding: "0.75rem 1rem",
         borderRadius: "var(--radius)",
-        border: `1px solid ${isTestnet ? "var(--warning, #f59e0b)" : "var(--success, #10b981)"}`,
+        border: `1px solid ${
+          isTestnet ? "var(--warning, #f59e0b)" : "var(--success, #10b981)"
+        }`,
         background: isTestnet
           ? "rgba(245,158,11,0.07)"
           : "rgba(16,185,129,0.07)",

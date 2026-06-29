@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useRef } from 'react'
 import { useTheme } from '../context/ThemeContext'
-import { ChartLegend } from '../components/ChartLegend'
+import { ChartLegend, type ChartLegendEntry } from '../components/ChartLegend'
 import { buildAnalyticsSeriesColors, getAnalyticsChartTokens } from './analyticsTheme'
 import { usePrefersReducedMotion } from '../utils/usePrefersReducedMotion'
 import { toCsv, downloadCsv } from '../utils/csv'
@@ -257,7 +257,7 @@ export default function Analytics() {
     labelStyle: { color: seriesColors.tooltipMuted },
   }), [seriesColors])
 
-  const successLegendEntries = showComparison
+  const successLegendEntries: ChartLegendEntry[] = showComparison
     ? [
         { label: 'This Period %', colorKey: 'success', id: 'success' },
         { label: 'Failed %', colorKey: 'failed', id: 'failed' },
@@ -268,7 +268,7 @@ export default function Analytics() {
         { label: 'Failed %', colorKey: 'failed', id: 'failed' },
       ]
 
-  const capitalLegendEntries = showComparison
+  const capitalLegendEntries: ChartLegendEntry[] = showComparison
     ? [
         { label: 'USDC Locked', colorKey: 'success', id: 'capital' },
         { label: 'Prev Period', colorKey: 'comparison', id: 'prev-capital' },

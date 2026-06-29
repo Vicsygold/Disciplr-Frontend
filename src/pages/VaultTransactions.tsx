@@ -90,13 +90,9 @@ const STATUS_META: Record<TxStatus, StatusMeta> = {
   },
 };
 
-// VAULTS filter options are derived from loaded transactions in the component.
-const TYPES: string[] = [
-  "All Types",
-  "create",
-  "validate",
-  "release",
-  "redirect",
+const VAULTS = [
+  "All Vaults",
+  ...Array.from(new Set(MOCK_TRANSACTIONS.map((t) => t.vault))),
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -239,13 +235,6 @@ export default function VaultTransactions() {
     [transactions],
   );
 
-  const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const tx of transactions) {
-      counts[tx.type] = (counts[tx.type] || 0) + 1;
-    }
-    return counts;
-  }, [transactions]);
 
   // Live counts reflect the current filtered (visible) set
   const filteredTypeCounts = useMemo(() => {

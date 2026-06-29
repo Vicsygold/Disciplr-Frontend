@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import ValidationDetail from '../ValidationDetail';
 import { useVerifierStore } from '../../Zustand/Store';
 

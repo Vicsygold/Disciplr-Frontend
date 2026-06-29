@@ -7,7 +7,7 @@ import { VerifierMetricsBar } from '../components/VerifierMetricsBar';
 import { computeVerifierMetrics } from '../utils/verifierMetrics';
 import { useVerifierStore } from '../Zustand/Store';
 import { StatusChip } from '../components/StatusChip';
-import { filterPending, PendingTask } from '../utils/filterPending';
+import { filterPending } from '../utils/filterPending';
 
 export default function PendingValidations() {
   const navigate = useNavigate();

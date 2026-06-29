@@ -73,6 +73,7 @@ export type ValidationTask = {
   evidenceUrl?: string;
   notes?: string;
   criteria?: string[];
+  decidedAt?: string;
 };
 
 type VerifierStoreType = {

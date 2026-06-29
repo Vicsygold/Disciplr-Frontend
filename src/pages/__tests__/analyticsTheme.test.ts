@@ -33,6 +33,9 @@ const CSS_PROPS: Record<keyof typeof ANALYTICS_TOKEN_FALLBACKS, string> = {
   border: '--border',
   bg: '--bg',
   accentTransparent: '--accent-transparent',
+  legendGap: '--legend-gap',
+  legendSwatchSize: '--legend-swatch-size',
+  legendLabelRole: '--legend-label-role',
 }
 
 describe('getAnalyticsChartTokens', () => {
