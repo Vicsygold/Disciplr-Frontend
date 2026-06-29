@@ -6,6 +6,8 @@
 from a live Horizon account query. Components read these values through
 `useWallet()` to surface balance-related UI.
 
+**For a complete guide covering the connection flow, state machine, network handling, and Horizon integration, see [docs/WALLET_INTEGRATION.md](../../docs/WALLET_INTEGRATION.md).**
+
 ## balanceStatus values
 
 | Value | Meaning |

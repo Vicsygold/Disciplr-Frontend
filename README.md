@@ -73,10 +73,11 @@ wallet UI in `src/components/Wallet/`.
 - Supported wallet network labels come from `WalletNetwork`: `TESTNET` and
   `PUBLIC`.
 
+**For detailed documentation on the wallet connection flow, balance state machine, USDC issuer selection, and error codes, see [docs/WALLET_INTEGRATION.md](docs/WALLET_INTEGRATION.md).**
+
 For Horizon endpoint URLs, USDC issuer addresses per network, explorer base
 URLs, the Testnet fallback behaviour, and a step-by-step checklist for adding
 or changing a network, see [`docs/NETWORK_CONFIG.md`](docs/NETWORK_CONFIG.md).
-
 ## Design System
 
 The `design-system/` package contains Disciplr's token source and validation
