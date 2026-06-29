@@ -13,6 +13,8 @@ type notificationsType = {
   setNotification: (value: NotificationItem[]) => void;
   markRead: (id: string) => void;
   markAllRead: () => void;
+  dismiss: (id: string) => void;
+  clearAll: () => void;
 };
 
 export const useNotification = create<notificationsType>((set) => ({
@@ -38,6 +40,21 @@ export const useNotification = create<notificationsType>((set) => ({
       notification: state.notification.map((item) =>
         item.isRead ? item : { ...item, isRead: true },
       ),
+      unreadCount: 0,
+    })),
+  dismiss: (id: string) =>
+    set((state) => {
+      const notification = state.notification.filter(
+        (item) => item.id !== id,
+      );
+      return {
+        notification,
+        unreadCount: notification.filter((item) => !item.isRead).length,
+      };
+    }),
+  clearAll: () =>
+    set(() => ({
+      notification: [],
       unreadCount: 0,
     })),
 }));
