@@ -60,7 +60,6 @@ export function AddressDisplay({
             >
                 {copied ? '✓' : '⏘'}
             </button>
-
             {network != null && isValid && (
                 <a
                     href={`${explorerBase}/${address}`}
