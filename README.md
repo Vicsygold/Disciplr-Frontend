@@ -27,6 +27,7 @@ notification surfaces.
 - Recharts and jsPDF for analytics/charting and export-related UI
 - Lucide React and React Icons for icons
 - A local `design-system/` package with Jest-tested token utilities
+- `src/utils/windowRange.ts` for list virtualization (see [docs/WINDOW_RANGE.md](docs/WINDOW_RANGE.md))
 
 ## Route And Page Map
 
@@ -250,6 +251,8 @@ disciplr-frontend/
   [docs/CREATE_VAULT_VALIDATION.md](docs/CREATE_VAULT_VALIDATION.md).
 - Keep network configuration (Horizon URLs, USDC issuers, explorer bases)
   aligned with [docs/NETWORK_CONFIG.md](docs/NETWORK_CONFIG.md).
+- Keep `windowRange` constants and threshold guidance aligned with
+  [docs/WINDOW_RANGE.md](docs/WINDOW_RANGE.md).
 
 ## Contributing
 
