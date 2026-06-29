@@ -3,13 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { CountdownDeadline } from '../components/CountdownDeadline';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { Text } from '../components/Text';
+import { VerifierMetricsBar } from '../components/VerifierMetricsBar';
+import { computeVerifierMetrics } from '../utils/verifierMetrics';
 import { useVerifierStore } from '../Zustand/Store';
 import { StatusChip } from '../components/StatusChip';
 import { filterPending, PendingTask } from '../utils/filterPending';
 
 export default function PendingValidations() {
   const navigate = useNavigate();
-  const { pendingValidations, batchApprove, batchReject } = useVerifierStore();
+  const { pendingValidations, validationHistory, batchApprove, batchReject } = useVerifierStore();
+
+  // Queue-at-a-glance metrics for the strip above the table.
+  const metrics = useMemo(
+    () => computeVerifierMetrics(pendingValidations, validationHistory),
+    [pendingValidations, validationHistory],
+  );
 
   // Filter and sort state
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,6 +130,8 @@ export default function PendingValidations() {
           Sort by Urgency: {sortOrder === 'asc' ? 'High to Low' : 'Low to High'}
         </button>
       </header>
+
+      <VerifierMetricsBar metrics={metrics} />
 
       {/* Search and filter controls */}
       <div className="flex flex-col md:flex-row gap-3 mb-4">
